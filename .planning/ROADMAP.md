@@ -63,9 +63,9 @@ Plans:
 **Requirements covered:** SB-01, SB-02, SB-03, SB-04, SB-05
 **Done when:** Sweetbook 샌드박스에서 주문 접수가 확인되고 orderUid가 반환된다
 
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
-- [ ] 03-01-PLAN.md — SDK install + SweetbookClient singleton + TypeScript declarations + env var validation
+- [x] 03-01-PLAN.md — SDK install + SweetbookClient singleton + TypeScript declarations + env var validation
 - [ ] 03-02-PLAN.md — POST /api/sweetbook/books (5-step flow + rollback) + POST /api/sweetbook/orders + index.ts mount
 
 ---

@@ -20,11 +20,11 @@
 
 ### Sweetbook Integration
 
-- [ ] **SB-01**: Sweetbook GET /templates 호출로 사용 가능한 템플릿 목록을 조회한다
+- [x] **SB-01**: Sweetbook GET /templates 호출로 사용 가능한 템플릿 목록을 조회한다
 - [ ] **SB-02**: Sweetbook POST /books 호출로 16페이지 책 객체를 생성하고 bookUid를 저장한다
 - [ ] **SB-03**: Sweetbook POST /orders 호출 시 UUIDv4 Idempotency-Key 헤더를 포함한다
 - [ ] **SB-04**: 주문 완료 후 orderUid를 화면에 표시한다
-- [ ] **SB-05**: API Key는 백엔드 환경변수에서만 관리한다 (.env, .gitignore 등록)
+- [x] **SB-05**: API Key는 백엔드 환경변수에서만 관리한다 (.env, .gitignore 등록)
 
 ### Preview & Order Flow
 

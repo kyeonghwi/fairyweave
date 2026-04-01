@@ -9,6 +9,8 @@
 | API | 용도 | 사용 시점 |
 |-----|------|----------|
 | (아직 사용 없음) | | |
+| `POST /books` | 책 객체 생성 (bookUid 획득) | Phase 3 |
+| `POST /orders` | 주문 전송 (Idempotency-Key 포함) | Phase 3 |
 
 ---
 
@@ -24,6 +26,7 @@
 | Claude Code | Phase 2 — imageGenerator 서비스 구현 (Promise.allSettled로 16장 병렬 생성, 개별 실패 시 placeholder 처리) | 2026-04-01 |
 | Claude Code | Phase 2 — bookStore 서비스 구현 (in-memory Map 기반 BookRecord 저장/조회) | 2026-04-01 |
 | Claude Code | Phase 2 — POST /api/generate-book (전체 파이프라인) 및 GET /api/books/:id 엔드포인트 구현 | 2026-04-01 |
+| Claude Code | Phase 3 — bookprintapi-nodejs-sdk 설치, sweetbook.d.ts TypeScript 타입 선언, sweebookClient.ts 싱글턴 서비스 구현 (startup env var validation) | 2026-04-01 |
 | Gemini 2.5 Flash | 텍스트 스토리 생성 API 호출 검증 | 2026-04-01 |
 | Gemini 2.5 Flash Image | 이미지 생성 API 호출 검증 (base64 PNG 반환 확인) | 2026-04-01 |
 

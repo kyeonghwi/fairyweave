@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 02-02-PLAN.md — image generation pipeline built
-last_updated: "2026-04-01T11:39:30.751Z"
+stopped_at: Completed 03-01-PLAN.md — Sweetbook SDK installed, SweetbookClient singleton with startup env var validation
+last_updated: "2026-04-01T12:34:28.245Z"
 progress:
-  total_phases: 2
+  total_phases: 3
   completed_phases: 2
-  total_plans: 4
-  completed_plans: 5
+  total_plans: 6
+  completed_plans: 6
 ---
 
 # Project State: FairyWeave
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 |-------|------|--------|-------|
 | 1 | Project Setup & Gemini API Spike | ✓ Complete | 2/2 |
 | 2 | AI Generation Pipeline | ✓ Complete | 2/2 |
-| 3 | Sweetbook API Integration | ○ Pending | 0/0 |
+| 3 | Sweetbook API Integration | ◑ In Progress | 1/? |
 | 4 | Frontend UI + Dummy Data | ○ Pending | 0/0 |
 | 5 | Polish + Submission Prep | ○ Pending | 0/0 |
 
@@ -47,6 +47,8 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 - **Phase 02-02:** Promise.allSettled instead of Promise.all — partial image failure should not abort the full book
 - **Phase 02-02:** PLACEHOLDER_IMAGE as inline SVG base64 — no external dependency, always available
 - **Phase 02-02:** In-memory Map store for v1 — Sweetbook API (next phase) owns the persistent book record
+- **Phase 03-01:** Env var validation at module load (not per-request) — missing keys throw immediately at server startup
+- **Phase 03-01:** Local .d.ts ambient declarations for bookprintapi-nodejs-sdk — SDK ships no TypeScript types; we declare only the Phase 3 subset
 
 ## Blockers
 
@@ -60,10 +62,11 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 | 01-project-setup-gemini-api-spike | 02 | 25min | 3 | 2 |
 | 02-ai-generation-pipeline | 01 | 12min | 2 | 3 |
 | 02-ai-generation-pipeline | 02 | 8min | 2 | 3 |
+| 03-sweetbook-api-integration | 01 | 8min | 2 | 5 |
 
 ## Last Session
 
-- **Stopped at:** Completed 02-02-PLAN.md — image generation pipeline built
+- **Stopped at:** Completed 03-01-PLAN.md — Sweetbook SDK installed, SweetbookClient singleton with startup env var validation
 - **Timestamp:** 2026-04-01T11:10:00Z
 
 ---
