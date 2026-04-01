@@ -19,6 +19,8 @@
 | Claude Code | Phase 1 — 모노레포 스캐폴딩 (package.json, Next.js 16, Express 백엔드 구조 생성) | 2026-04-01 |
 | Claude Code | Phase 1 — Gemini API 스파이크 (`POST /api/generate`, `POST /api/generate-image` 라우트 구현) | 2026-04-01 |
 | Claude Code | Phase 1 — 모델 선택: gemini-2.0-flash가 신규 계정에서 404 반환 → gemini-2.5-flash / gemini-2.5-flash-image로 교체 | 2026-04-01 |
+| Claude Code | Phase 2 — 스토리 타입 정의 (StoryPage, GenerateStoryRequest, GenerateStoryResponse, BookRecord) 및 storyGenerator 서비스 구현 | 2026-04-01 |
+| Claude Code | Phase 2 — POST /api/generate-story 엔드포인트 구현 (메타-프롬프트 엔지니어링, JSON 파싱, 스타일 시드 주입) | 2026-04-01 |
 | Gemini 2.5 Flash | 텍스트 스토리 생성 API 호출 검증 | 2026-04-01 |
 | Gemini 2.5 Flash Image | 이미지 생성 API 호출 검증 (base64 PNG 반환 확인) | 2026-04-01 |
 
