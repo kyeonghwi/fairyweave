@@ -14,7 +14,7 @@
 ### AI Generation
 
 - [x] **AI-01**: 백엔드가 Gemini API를 호출하여 16페이지 스토리 텍스트 + 각 페이지의 이미지 생성 프롬프트를 JSON 배열로 반환받는다
-- [ ] **AI-02**: 백엔드가 Gemini 이미지 생성 API를 병렬 호출하여 16장의 삽화를 생성한다
+- [x] **AI-02**: 백엔드가 Gemini 이미지 생성 API를 병렬 호출하여 16장의 삽화를 생성한다
 - [x] **AI-03**: 이미지 스타일 일관성을 위해 모든 이미지 프롬프트에 공통 스타일 시드 구문을 강제 삽입한다 ("soft watercolor children's book illustration, pastel colors")
 - [ ] **AI-04**: 생성 중 사용자에게 진행 상태(로딩/스트리밍) 피드백을 제공한다
 

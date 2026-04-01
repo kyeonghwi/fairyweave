@@ -21,6 +21,9 @@
 | Claude Code | Phase 1 — 모델 선택: gemini-2.0-flash가 신규 계정에서 404 반환 → gemini-2.5-flash / gemini-2.5-flash-image로 교체 | 2026-04-01 |
 | Claude Code | Phase 2 — 스토리 타입 정의 (StoryPage, GenerateStoryRequest, GenerateStoryResponse, BookRecord) 및 storyGenerator 서비스 구현 | 2026-04-01 |
 | Claude Code | Phase 2 — POST /api/generate-story 엔드포인트 구현 (메타-프롬프트 엔지니어링, JSON 파싱, 스타일 시드 주입) | 2026-04-01 |
+| Claude Code | Phase 2 — imageGenerator 서비스 구현 (Promise.allSettled로 16장 병렬 생성, 개별 실패 시 placeholder 처리) | 2026-04-01 |
+| Claude Code | Phase 2 — bookStore 서비스 구현 (in-memory Map 기반 BookRecord 저장/조회) | 2026-04-01 |
+| Claude Code | Phase 2 — POST /api/generate-book (전체 파이프라인) 및 GET /api/books/:id 엔드포인트 구현 | 2026-04-01 |
 | Gemini 2.5 Flash | 텍스트 스토리 생성 API 호출 검증 | 2026-04-01 |
 | Gemini 2.5 Flash Image | 이미지 생성 API 호출 검증 (base64 PNG 반환 확인) | 2026-04-01 |
 

@@ -42,10 +42,10 @@ Plans:
 **Requirements covered:** AI-01, AI-02, AI-03
 **Done when:** 입력값 → 16페이지 스토리 + 이미지 URL 배열이 API 응답으로 반환된다
 
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [x] 02-01-PLAN.md — Types + meta-prompt + story generation endpoint (POST /api/generate-story)
-- [ ] 02-02-PLAN.md — Parallel image generation + in-memory store + unified generate-book endpoint
+- [x] 02-02-PLAN.md — Parallel image generation + in-memory store + unified generate-book endpoint
 
 ---
 
