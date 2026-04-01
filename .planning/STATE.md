@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: "Completed 03-02-PLAN.md — sweetbook routes implemented (POST /api/sweetbook/books 5-step flow + POST /api/sweetbook/orders), awaiting Task 3 sandbox verification checkpoint"
-last_updated: "2026-04-01T12:34:28.245Z"
+stopped_at: Completed 03-02-PLAN.md — sandbox verification passed, bookUid and orderUid returned from Sweetbook sandbox
+last_updated: "2026-04-01T14:08:57.226Z"
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 6
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # Project State: FairyWeave
@@ -19,11 +19,11 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-01)
 
 **Core value:** 부모가 입력한 아이 정보로 세상에 단 하나뿐인 동화책을 3분 안에 만들어 주문할 수 있어야 한다.
-**Current focus:** Phase 03 — sweetbook-api-integration
+**Current focus:** Phase 04 — frontend-ui
 
 ## Progress
 
-[████░░░░░░] 40% (2/5 phases complete)
+[██████░░░░] 60% (3/5 phases complete)
 
 ## Phase Status
 
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 |-------|------|--------|-------|
 | 1 | Project Setup & Gemini API Spike | ✓ Complete | 2/2 |
 | 2 | AI Generation Pipeline | ✓ Complete | 2/2 |
-| 3 | Sweetbook API Integration | ◑ In Progress | 2/? |
+| 3 | Sweetbook API Integration | ✓ Complete | 2/2 |
 | 4 | Frontend UI + Dummy Data | ○ Pending | 0/0 |
 | 5 | Polish + Submission Prep | ○ Pending | 0/0 |
 
@@ -52,6 +52,9 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 - **Phase 03-02:** Sequential photo upload (not parallel) — deferred optimization per CONTEXT.md
 - **Phase 03-02:** creationType: 'TEST' hardcoded — prevents accidental billing in NORMAL mode (sandbox sandbox behavior)
 - **Phase 03-02:** Rollback delete errors swallowed — books.delete is best-effort, original error propagates to client
+- **Phase 03-02:** Lazy Proxy singleton for sweetbookClient fixes dotenv import-order race without changing startup sequence
+- **Phase 03-02:** File instead of Blob for photo upload — Sweetbook multipart requires filename in Content-Disposition
+- **Phase 03-02:** Step 4b blank pages (template 2mi1ao0Z4Vxl) pads 16 content pages to 24-page SQUAREBOOK_HC minimum
 
 ## Blockers
 
@@ -66,11 +69,11 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 | 02-ai-generation-pipeline | 01 | 12min | 2 | 3 |
 | 02-ai-generation-pipeline | 02 | 8min | 2 | 3 |
 | 03-sweetbook-api-integration | 01 | 8min | 2 | 5 |
-| 03-sweetbook-api-integration | 02 | 8min | 2 | 3 |
+| 03-sweetbook-api-integration | 02 | 30min | 3 | 4 |
 
 ## Last Session
 
-- **Stopped at:** Completed 03-02-PLAN.md tasks 1-2 — sweetbook routes implemented, awaiting Task 3 sandbox verification checkpoint
+- **Stopped at:** Completed 03-02-PLAN.md — sandbox verification passed, bookUid and orderUid returned from Sweetbook sandbox
 - **Timestamp:** 2026-04-01T12:44:00Z
 
 ---
