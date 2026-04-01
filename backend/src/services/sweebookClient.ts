@@ -24,6 +24,6 @@ let _client: SweetbookClient | undefined;
 export const sweetbookClient = new Proxy({} as SweetbookClient, {
   get(_target, prop) {
     if (!_client) _client = createClient();
-    return (_client as Record<string | symbol, unknown>)[prop];
+    return (_client as unknown as Record<string | symbol, unknown>)[prop];
   },
 });
