@@ -3,11 +3,11 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in-progress
-stopped_at: "Checkpoint: human-verify after 01-02 tasks complete — awaiting GEMINI_API_KEY smoke test"
-last_updated: "2026-04-01T10:34:21.172Z"
+stopped_at: "Completed 01-02-PLAN.md — Gemini spike verified, Phase 1 complete"
+last_updated: "2026-04-01T11:10:00Z"
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
   completed_plans: 2
 ---
@@ -19,11 +19,11 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-01)
 
 **Core value:** 부모가 입력한 아이 정보로 세상에 단 하나뿐인 동화책을 3분 안에 만들어 주문할 수 있어야 한다.
-**Current focus:** Phase 02 — AI Generation Pipeline (plan 2/2 complete for Phase 01)
+**Current focus:** Phase 02 — AI Generation Pipeline (Phase 01 complete: 2/2 plans)
 
 ## Progress
 
-[██████████] 100% (2/2 plans for Phase 01)
+[██░░░░░░░░] 20% (1/5 phases complete)
 
 ## Phase Status
 
@@ -39,7 +39,8 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 
 - **Phase 01-01:** Next.js 16 + Tailwind v4 used (create-next-app resolved to latest, not v14+v3 as planned) — build passes, kept newer version
 - **Phase 01-01:** Backend uses `const PORT = 3001` variable, not literal in app.listen — functionally identical
-- **Phase 01-02:** Image endpoint returns 501 (not 500) for no-image response — signals model unavailability vs server error; Phase 2 will add Imagen 3 fallback
+- **Phase 01-02:** Models updated to gemini-2.5-flash (text) and gemini-2.5-flash-image (image) after live testing; both return real responses
+- **Phase 01-02:** Image endpoint returns actual base64 PNG via gemini-2.5-flash-image — no Imagen 3 fallback needed for Phase 1
 
 ## Blockers
 
@@ -50,12 +51,12 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
 | 01-project-setup-gemini-api-spike | 01 | 20min | 2 | 20 |
-| 01-project-setup-gemini-api-spike | 02 | 15min | 2 | 2 |
+| 01-project-setup-gemini-api-spike | 02 | 25min | 3 | 2 |
 
 ## Last Session
 
-- **Stopped at:** Checkpoint: human-verify after 01-02 tasks complete — awaiting GEMINI_API_KEY smoke test
-- **Timestamp:** 2026-04-01T09:22:00Z
+- **Stopped at:** Completed 01-02-PLAN.md — Gemini spike verified, Phase 1 complete
+- **Timestamp:** 2026-04-01T11:10:00Z
 
 ---
-*Last updated: 2026-04-01 — after 01-02 checkpoint (awaiting human verify)*
+*Last updated: 2026-04-01 — Phase 1 complete, ready for Phase 2*

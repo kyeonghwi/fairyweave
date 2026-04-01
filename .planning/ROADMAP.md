@@ -23,7 +23,7 @@
 
 **Plans:** 2/2 plans complete
 Plans:
-- [ ] 01-PLAN-1-monorepo-setup.md — Root workspace + Next.js frontend + Express backend scaffold
+- [x] 01-PLAN-1-monorepo-setup.md — Root workspace + Next.js frontend + Express backend scaffold
 - [x] 01-PLAN-2-gemini-spike.md — Gemini text and image generation endpoints wired and smoke tested
 
 ---
