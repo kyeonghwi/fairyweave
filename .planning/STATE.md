@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 03-01-PLAN.md — Sweetbook SDK installed, SweetbookClient singleton with startup env var validation
+stopped_at: "Completed 03-02-PLAN.md — sweetbook routes implemented (POST /api/sweetbook/books 5-step flow + POST /api/sweetbook/orders), awaiting Task 3 sandbox verification checkpoint"
 last_updated: "2026-04-01T12:34:28.245Z"
 progress:
   total_phases: 3
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 |-------|------|--------|-------|
 | 1 | Project Setup & Gemini API Spike | ✓ Complete | 2/2 |
 | 2 | AI Generation Pipeline | ✓ Complete | 2/2 |
-| 3 | Sweetbook API Integration | ◑ In Progress | 1/? |
+| 3 | Sweetbook API Integration | ◑ In Progress | 2/? |
 | 4 | Frontend UI + Dummy Data | ○ Pending | 0/0 |
 | 5 | Polish + Submission Prep | ○ Pending | 0/0 |
 
@@ -49,6 +49,9 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 - **Phase 02-02:** In-memory Map store for v1 — Sweetbook API (next phase) owns the persistent book record
 - **Phase 03-01:** Env var validation at module load (not per-request) — missing keys throw immediately at server startup
 - **Phase 03-01:** Local .d.ts ambient declarations for bookprintapi-nodejs-sdk — SDK ships no TypeScript types; we declare only the Phase 3 subset
+- **Phase 03-02:** Sequential photo upload (not parallel) — deferred optimization per CONTEXT.md
+- **Phase 03-02:** creationType: 'TEST' hardcoded — prevents accidental billing in NORMAL mode (sandbox sandbox behavior)
+- **Phase 03-02:** Rollback delete errors swallowed — books.delete is best-effort, original error propagates to client
 
 ## Blockers
 
@@ -63,11 +66,12 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 | 02-ai-generation-pipeline | 01 | 12min | 2 | 3 |
 | 02-ai-generation-pipeline | 02 | 8min | 2 | 3 |
 | 03-sweetbook-api-integration | 01 | 8min | 2 | 5 |
+| 03-sweetbook-api-integration | 02 | 8min | 2 | 3 |
 
 ## Last Session
 
-- **Stopped at:** Completed 03-01-PLAN.md — Sweetbook SDK installed, SweetbookClient singleton with startup env var validation
-- **Timestamp:** 2026-04-01T11:10:00Z
+- **Stopped at:** Completed 03-02-PLAN.md tasks 1-2 — sweetbook routes implemented, awaiting Task 3 sandbox verification checkpoint
+- **Timestamp:** 2026-04-01T12:44:00Z
 
 ---
 *Last updated: 2026-04-01 — Phase 1 complete, ready for Phase 2*
