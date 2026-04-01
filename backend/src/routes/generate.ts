@@ -1,5 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { generateStory } from '../services/storyGenerator';
+import type { GenerateStoryRequest } from '../types/story';
 
 const router = Router();
 
@@ -90,6 +92,35 @@ router.post('/generate-image', async (req: Request, res: Response) => {
   } catch (err) {
     console.error('[/api/generate-image] Error:', err);
     res.status(500).json({ error: 'Gemini image generation failed' });
+  }
+});
+
+// POST /api/generate-story — 16-page story generation pipeline (Phase 2)
+router.post('/generate-story', async (req: Request, res: Response) => {
+  const { childName, age, theme, moral } = req.body as Partial<GenerateStoryRequest>;
+
+  // Validate required fields
+  if (!childName || !age || !theme || !moral) {
+    res.status(400).json({
+      error: 'Missing required fields',
+      required: ['childName', 'age', 'theme', 'moral'],
+    });
+    return;
+  }
+
+  if (typeof age !== 'number' || age < 1 || age > 12) {
+    res.status(400).json({ error: 'age must be a number between 1 and 12' });
+    return;
+  }
+
+  try {
+    console.log(`[/api/generate-story] Generating story for ${childName} (age ${age}), theme: ${theme}`);
+    const pages = await generateStory({ childName, age, theme, moral });
+    console.log(`[/api/generate-story] Generated ${pages.length} pages`);
+    res.json({ pages });
+  } catch (err) {
+    console.error('[/api/generate-story] Error:', err);
+    res.status(500).json({ error: 'Story generation failed' });
   }
 });
 
