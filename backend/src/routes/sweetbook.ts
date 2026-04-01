@@ -10,25 +10,26 @@ import {
 
 const router = Router();
 
-// Convert base64 data URI to Node.js Blob
-function dataUriToBlob(dataUri: string): Blob {
+// Convert base64 data URI to File (filename required for Sweetbook API multipart upload)
+function dataUriToFile(dataUri: string, filename: string): File {
   const commaIdx = dataUri.indexOf(',');
   const header = dataUri.slice(0, commaIdx);
   const base64 = dataUri.slice(commaIdx + 1);
   const mimeType = header.match(/:(.*?);/)?.[1] ?? 'image/png';
   const buffer = Buffer.from(base64, 'base64');
-  return new Blob([buffer], { type: mimeType });
+  return new File([buffer], filename, { type: mimeType });
 }
 
-// Extract URL from photos.upload response — field name varies by API response
-function extractPhotoUrl(photo: Record<string, unknown>): string {
-  const url = (photo.url ?? photo.photoUrl ?? photo.fileUrl) as string | undefined;
-  if (!url) {
+// Extract photo reference from photos.upload response.
+// API returns fileName (stored reference), not a URL.
+function extractPhotoRef(photo: Record<string, unknown>): string {
+  const ref = (photo.fileName ?? photo.url ?? photo.photoUrl ?? photo.fileUrl) as string | undefined;
+  if (!ref) {
     throw new Error(
-      `photos.upload response missing URL field. Got keys: ${Object.keys(photo).join(', ')}`
+      `photos.upload response missing reference field. Got keys: ${Object.keys(photo).join(', ')}`
     );
   }
-  return url;
+  return ref;
 }
 
 // POST /api/sweetbook/books
@@ -74,33 +75,54 @@ router.post('/sweetbook/books', async (req: Request, res: Response) => {
     const coverTemplateUid = process.env.SWEETBOOK_COVER_TEMPLATE_UID!;
     const contentTemplateUid = process.env.SWEETBOOK_CONTENT_TEMPLATE_UID!;
 
-    const photoUrls: string[] = [];
+    const photoRefs: string[] = [];
     for (let i = 0; i < record.imageUrls.length; i++) {
-      const blob = dataUriToBlob(record.imageUrls[i]);
-      const photo = await sweetbookClient.photos.upload(bookUid, blob) as Record<string, unknown>;
-      const photoUrl = extractPhotoUrl(photo);
-      photoUrls.push(photoUrl);
-      console.log(`[/api/sweetbook/books] Step 2: uploaded photo ${i + 1}/${record.imageUrls.length}`);
+      const file = dataUriToFile(record.imageUrls[i], `photo_${i + 1}.png`);
+      const photo = await sweetbookClient.photos.upload(bookUid, file) as Record<string, unknown>;
+      const photoRef = extractPhotoRef(photo);
+      photoRefs.push(photoRef);
+      console.log(`[/api/sweetbook/books] Step 2: uploaded photo ${i + 1}/${record.imageUrls.length} → ${photoRef}`);
     }
 
     // Step 3: Create cover using first image
+    // Template 79yjMH3qRPly requires: coverPhoto, title, dateRange
+    const year = new Date().getFullYear().toString();
     await sweetbookClient.covers.create(
       bookUid,
       coverTemplateUid,
-      { coverPhoto: photoUrls[0], title: bookTitle }
+      { coverPhoto: photoRefs[0], title: bookTitle, dateRange: year }
     );
     console.log(`[/api/sweetbook/books] Step 3: cover created`);
 
     // Step 4: Insert 16 content pages
+    // Template 2R8uMwVgTrpc requires: photo1, date, title, diaryText
+    const today = new Date().toISOString().slice(0, 10);
     for (let i = 0; i < record.pages.length; i++) {
       await sweetbookClient.contents.insert(
         bookUid,
         contentTemplateUid,
-        { photo: photoUrls[i], text: record.pages[i].text },
+        {
+          photo1: photoRefs[i],
+          date: today,
+          title: `${i + 1}화`,
+          diaryText: record.pages[i].text,
+        },
         { breakBefore: 'page' }
       );
     }
     console.log(`[/api/sweetbook/books] Step 4: ${record.pages.length} pages inserted`);
+
+    // Step 4b: Pad to minimum 24 pages with blank pages (SQUAREBOOK_HC minimum)
+    const BLANK_TEMPLATE_UID = '2mi1ao0Z4Vxl';
+    const contentPageCount = record.pages.length; // 16
+    const minPages = 24;
+    const blankCount = Math.max(0, minPages - contentPageCount);
+    for (let i = 0; i < blankCount; i++) {
+      await sweetbookClient.contents.insert(bookUid, BLANK_TEMPLATE_UID, {}, { breakBefore: 'page' });
+    }
+    if (blankCount > 0) {
+      console.log(`[/api/sweetbook/books] Step 4b: added ${blankCount} blank pages to reach 24-page minimum`);
+    }
 
     // Step 5: Finalize
     await sweetbookClient.books.finalize(bookUid);

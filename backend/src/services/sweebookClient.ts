@@ -19,4 +19,11 @@ function createClient(): SweetbookClient {
   return new SweetbookClient({ apiKey, environment: env });
 }
 
-export const sweetbookClient = createClient();
+// Lazy singleton — created on first use so dotenv.config() in index.ts runs first
+let _client: SweetbookClient | undefined;
+export const sweetbookClient = new Proxy({} as SweetbookClient, {
+  get(_target, prop) {
+    if (!_client) _client = createClient();
+    return (_client as Record<string | symbol, unknown>)[prop];
+  },
+});
