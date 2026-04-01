@@ -21,10 +21,10 @@
 **Requirements covered:** 사전 기반 작업
 **Done when:** `npm run dev` 실행 시 Gemini 텍스트+이미지 생성 응답이 콘솔에 찍힌다
 
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [ ] 01-PLAN-1-monorepo-setup.md — Root workspace + Next.js frontend + Express backend scaffold
-- [ ] 01-PLAN-2-gemini-spike.md — Gemini text and image generation endpoints wired and smoke tested
+- [x] 01-PLAN-2-gemini-spike.md — Gemini text and image generation endpoints wired and smoke tested
 
 ---
 
