@@ -22,7 +22,7 @@ router.post('/generate', async (req: Request, res: Response) => {
 
   try {
     const genAI = getGeminiClient();
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const result = await model.generateContent(prompt);
     const text = result.response.text();
@@ -48,9 +48,8 @@ router.post('/generate-image', async (req: Request, res: Response) => {
   try {
     const genAI = getGeminiClient();
 
-    // Try gemini-2.0-flash-exp first (supports image generation via responseModalities)
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash-exp',
+      model: 'gemini-2.5-flash-image',
       generationConfig: {
         // @ts-ignore — responseModalities not yet typed in SDK but required for image output
         responseModalities: ['Text', 'Image'],
