@@ -85,7 +85,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
     // Fetch from API (fallback for direct URL access)
     fetch(`/api/books/${id}`)
       .then((res) => {
-        if (!res.ok) throw new Error('책을 찾을 수 없어요');
+        if (!res.ok) throw new Error('AI_BOOK_EXPIRED');
         return res.json();
       })
       .then((data) => {
@@ -99,16 +99,32 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
           isDummy: false,
         });
       })
-      .catch((err) => setLoadError(err.message));
+      .catch((err) => setLoadError(err.message === 'AI_BOOK_EXPIRED' ? 'AI_BOOK_EXPIRED' : err.message));
   }, [id]);
 
   if (loadError) {
+    const isExpired = loadError === 'AI_BOOK_EXPIRED';
     return (
       <PageLayout className="flex flex-col items-center justify-center min-h-[60vh]">
-        <ErrorBanner message={loadError} />
-        <Link href="/" className="mt-6">
-          <Button variant="outline">메인으로</Button>
-        </Link>
+        <div className="text-center">
+          <span className="text-5xl block mb-4">{isExpired ? '⏳' : '😢'}</span>
+          <h2 className="font-[family-name:var(--font-jua)] text-xl text-[#2D2D2D] mb-2">
+            {isExpired ? '생성된 책 데이터가 만료되었어요' : '문제가 발생했어요'}
+          </h2>
+          <p className="text-[#5C5C5C] mb-6">
+            {isExpired
+              ? 'AI로 생성한 책은 서버 메모리에 임시 저장돼요. 다시 만들어 보세요!'
+              : loadError}
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Link href="/create">
+              <Button variant="primary">다시 만들기</Button>
+            </Link>
+            <Link href="/">
+              <Button variant="outline">메인으로</Button>
+            </Link>
+          </div>
+        </div>
       </PageLayout>
     );
   }

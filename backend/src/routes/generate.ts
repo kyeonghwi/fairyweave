@@ -101,11 +101,11 @@ router.post('/generate-image', async (req: Request, res: Response) => {
 router.post('/generate-story', async (req: Request, res: Response) => {
   const { childName, age, theme, moral } = req.body as Partial<GenerateStoryRequest>;
 
-  // Validate required fields
-  if (!childName || !age || !theme || !moral) {
+  // Validate required fields (moral is optional — defaults to a fun story)
+  if (!childName || !age || !theme) {
     res.status(400).json({
       error: 'Missing required fields',
-      required: ['childName', 'age', 'theme', 'moral'],
+      required: ['childName', 'age', 'theme'],
     });
     return;
   }
@@ -115,9 +115,11 @@ router.post('/generate-story', async (req: Request, res: Response) => {
     return;
   }
 
+  const effectiveMoral = moral?.trim() || '재미있고 따뜻한 이야기';
+
   try {
     console.log(`[/api/generate-story] Generating story for ${childName} (age ${age}), theme: ${theme}`);
-    const pages = await generateStory({ childName, age, theme, moral });
+    const pages = await generateStory({ childName, age, theme, moral: effectiveMoral });
     console.log(`[/api/generate-story] Generated ${pages.length} pages`);
     res.json({ pages });
   } catch (err) {
@@ -130,10 +132,10 @@ router.post('/generate-story', async (req: Request, res: Response) => {
 router.post('/generate-book', async (req: Request, res: Response) => {
   const { childName, age, theme, moral } = req.body as Partial<GenerateStoryRequest>;
 
-  if (!childName || !age || !theme || !moral) {
+  if (!childName || !age || !theme) {
     res.status(400).json({
       error: 'Missing required fields',
-      required: ['childName', 'age', 'theme', 'moral'],
+      required: ['childName', 'age', 'theme'],
     });
     return;
   }
@@ -143,8 +145,10 @@ router.post('/generate-book', async (req: Request, res: Response) => {
     return;
   }
 
+  const effectiveMoral = moral?.trim() || '재미있고 따뜻한 이야기';
+
   try {
-    const request = { childName, age, theme, moral };
+    const request = { childName, age, theme, moral: effectiveMoral };
     console.log(`[/api/generate-book] Starting full pipeline for ${childName}`);
 
     // Step 1: Generate story text + image prompts

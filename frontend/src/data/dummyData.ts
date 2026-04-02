@@ -24,7 +24,6 @@ function placeholderSvg(color: string, pageNum: number, emoji: string): string {
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
-// Generate cover SVG
 function coverSvg(color: string, title: string, emoji: string): string {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024"><rect width="1024" height="1024" fill="${color}"/><text x="512" y="380" text-anchor="middle" font-size="180" opacity="0.9">${emoji}</text><text x="512" y="580" text-anchor="middle" font-size="64" fill="#2D2D2D" font-weight="bold">${title}</text><text x="512" y="660" text-anchor="middle" font-size="36" fill="#5C5C5C">FairyWeave</text></svg>`;
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;

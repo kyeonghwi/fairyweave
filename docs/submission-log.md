@@ -40,6 +40,7 @@
 | Claude Code | Phase 4 — 책 데이터 전달: window.__bookCache로 create→book 페이지 간 데이터 핸드오프 (base64 이미지 sessionStorage 초과 해결) | 2026-04-02 |
 | Claude Code | Phase 4 — PageSlider object-cover → object-contain 변경 (AI 생성 이미지 잘림 방지) | 2026-04-02 |
 | Claude Code | Phase 5 — SVG→PNG placeholder 변환 버그픽스: MIME 타입 regex 수정 + zlib 512x512 PNG 런타임 생성으로 Sweetbook photo upload 400/500 해결 | 2026-04-03 |
+| Claude Code | Phase 5 — CEO 리뷰 후 코드 품질 개선: sweetbook.ts DRY 리팩토링(공유 함수 추출), moral 필드 버그 수정, 만료 책 UX 개선, 고아 파일 제거, 유닛 테스트 11개 추가 | 2026-04-03 |
 | Gemini 2.5 Flash | 텍스트 스토리 생성 API 호출 검증 | 2026-04-01 |
 | Gemini 2.5 Flash Image | 이미지 생성 API 호출 검증 (base64 PNG 반환 확인) | 2026-04-01 |
 
