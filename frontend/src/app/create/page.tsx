@@ -91,7 +91,8 @@ export default function CreatePage() {
         });
       }, 800);
 
-      const res = await fetch('/api/generate-book', {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+      const res = await fetch(`${backendUrl}/api/generate-book`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -112,6 +113,12 @@ export default function CreatePage() {
       const data = await res.json();
       setProgress(100);
       setStepText('완성!');
+
+      // Cache book data in memory for the book page (sessionStorage too small for base64 images)
+      (window as any).__bookCache = {
+        ...data,
+        request: { childName: childName.trim(), age: Number(age), theme: effectiveTheme.trim(), moral: moral.trim() },
+      };
 
       // Navigate to book preview
       setTimeout(() => {

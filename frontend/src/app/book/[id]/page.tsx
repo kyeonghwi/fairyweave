@@ -66,7 +66,23 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
       return;
     }
 
-    // Fetch from API
+    // Try in-memory cache (set by create page after generation)
+    const cached = (window as any).__bookCache;
+    if (cached && (cached.bookId === id)) {
+      setBook({
+        id: cached.bookId,
+        title: `${cached.request?.childName || '아이'}의 동화책`,
+        childName: cached.request?.childName || '',
+        theme: cached.request?.theme || '',
+        pages: cached.pages,
+        imageUrls: cached.imageUrls,
+        isDummy: false,
+      });
+      delete (window as any).__bookCache;
+      return;
+    }
+
+    // Fetch from API (fallback for direct URL access)
     fetch(`/api/books/${id}`)
       .then((res) => {
         if (!res.ok) throw new Error('책을 찾을 수 없어요');

@@ -62,7 +62,7 @@ export default function PageSlider({ pages, imageUrls, currentPage, onPageChange
         <img
           src={imageUrls[currentPage]}
           alt={`${bookTitle ? `${bookTitle} ` : ''}${currentPage + 1}페이지`}
-          className="w-full aspect-[3/4] object-cover animate-fadeScaleIn"
+          className="w-full object-contain animate-fadeScaleIn"
           key={currentPage}
         />
       </div>

@@ -30,7 +30,10 @@ RULES:
 JSON array:`;
 
   const genAI = getGeminiClient();
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const model = genAI.getGenerativeModel({
+    model: 'gemini-2.5-flash',
+    generationConfig: { responseMimeType: 'application/json' },
+  });
 
   const result = await model.generateContent(prompt);
   let responseText = result.response.text();
@@ -41,7 +44,24 @@ JSON array:`;
     responseText = fenceMatch[1];
   }
 
-  const pages: StoryPage[] = JSON.parse(responseText.trim());
+  // Extract the outermost JSON array
+  const arrStart = responseText.indexOf('[');
+  const arrEnd = responseText.lastIndexOf(']');
+  if (arrStart === -1 || arrEnd === -1) {
+    throw new Error('No JSON array found in Gemini response');
+  }
+  let jsonStr = responseText.slice(arrStart, arrEnd + 1);
+
+  // Repair common LLM JSON issues: trailing commas before ] or }
+  jsonStr = jsonStr.replace(/,\s*([\]}])/g, '$1');
+
+  let pages: StoryPage[];
+  try {
+    pages = JSON.parse(jsonStr);
+  } catch (e) {
+    console.error('[generateStory] JSON parse failed after repair. Raw response (first 500 chars):', responseText.slice(0, 500));
+    throw new Error(`Failed to parse Gemini story response: ${(e as Error).message}`);
+  }
 
   if (!Array.isArray(pages) || pages.length !== 16) {
     throw new Error(`Expected 16 pages but got ${Array.isArray(pages) ? pages.length : 'non-array'}`);
