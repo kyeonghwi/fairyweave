@@ -1,0 +1,17 @@
+{
+  "project": "FairyWeave",
+  "created": "2026-04-01",
+  "deadline": "2026-04-08T23:59:00+09:00",
+  "workflow": {
+    "research": false,
+    "phases": 5,
+    "_auto_chain_active": false
+  },
+  "stack": {
+    "frontend": "Next.js + TypeScript + Tailwind CSS",
+    "backend": "Node.js + Express",
+    "ai": "Gemini API (text + image)",
+    "print": "Sweetbook Book Print API (Node.js SDK)",
+    "db": "none (stateless for v1)"
+  }
+}
