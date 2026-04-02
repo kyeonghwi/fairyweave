@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { randomUUID } from 'node:crypto';
+import { deflateSync } from 'node:zlib';
 import { sweetbookClient } from '../services/sweebookClient';
 import { bookStore } from '../services/bookStore';
 import {
@@ -10,13 +11,64 @@ import {
 
 const router = Router();
 
-// Convert base64 data URI to File (filename required for Sweetbook API multipart upload)
+// Generate a valid 512x512 solid-color PNG at startup.
+// Sweetbook's image processor rejects trivially small images with HTTP 500.
+function buildPlaceholderPng(): Buffer {
+  const W = 512, H = 512;
+  const rowSize = 1 + W * 3; // filter byte + RGB per pixel
+  const raw = Buffer.alloc(rowSize * H);
+  for (let y = 0; y < H; y++) {
+    const off = y * rowSize;
+    raw[off] = 0; // filter: none
+    for (let x = 0; x < W; x++) {
+      const px = off + 1 + x * 3;
+      raw[px] = 220; raw[px + 1] = 220; raw[px + 2] = 220;
+    }
+  }
+  const compressed = deflateSync(raw);
+
+  function crc32(buf: Buffer): number {
+    let c = 0xFFFFFFFF;
+    for (let i = 0; i < buf.length; i++) {
+      c ^= buf[i];
+      for (let j = 0; j < 8; j++) c = (c >>> 1) ^ (c & 1 ? 0xEDB88320 : 0);
+    }
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+  function chunk(type: string, data: Buffer): Buffer {
+    const len = Buffer.alloc(4); len.writeUInt32BE(data.length);
+    const td = Buffer.concat([Buffer.from(type), data]);
+    const crc = Buffer.alloc(4); crc.writeUInt32BE(crc32(td));
+    return Buffer.concat([len, td, crc]);
+  }
+
+  const sig = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(W, 0);
+  ihdr.writeUInt32BE(H, 4);
+  ihdr[8] = 8;  // bit depth
+  ihdr[9] = 2;  // color type: RGB
+
+  return Buffer.concat([sig, chunk('IHDR', ihdr), chunk('IDAT', compressed), chunk('IEND', Buffer.alloc(0))]);
+}
+
+const FALLBACK_PNG = buildPlaceholderPng();
+
 function dataUriToFile(dataUri: string, filename: string): File {
   const commaIdx = dataUri.indexOf(',');
   const header = dataUri.slice(0, commaIdx);
-  const base64 = dataUri.slice(commaIdx + 1);
-  const mimeType = header.match(/:(.*?);/)?.[1] ?? 'image/png';
-  const buffer = Buffer.from(base64, 'base64');
+  const data = dataUri.slice(commaIdx + 1);
+  const mimeType = header.match(/:(.*?)(?:;|$)/)?.[1] ?? 'image/png';
+
+  // Sweetbook print API requires raster images — substitute a 512x512 PNG for SVG placeholders
+  if (mimeType === 'image/svg+xml') {
+    return new File([FALLBACK_PNG], filename, { type: 'image/png' });
+  }
+
+  const isBase64 = header.includes(';base64');
+  const buffer = isBase64
+    ? Buffer.from(data, 'base64')
+    : Buffer.from(decodeURIComponent(data), 'utf-8');
   return new File([buffer], filename, { type: mimeType });
 }
 
@@ -276,9 +328,16 @@ router.post('/sweetbook/books-from-data', async (req: Request, res: Response) =>
     const photoRefs: string[] = [];
     for (let i = 0; i < imageUrls.length; i++) {
       const file = dataUriToFile(imageUrls[i], `photo_${i + 1}.png`);
-      const photo = await sweetbookClient.photos.upload(bookUid, file) as Record<string, unknown>;
-      photoRefs.push(extractPhotoRef(photo));
-      console.log(`[/api/sweetbook/books-from-data] Step 2: uploaded photo ${i + 1}/${imageUrls.length}`);
+      console.log(`[/api/sweetbook/books-from-data] Step 2: uploading photo ${i + 1}/${imageUrls.length} (type=${file.type}, size=${file.size})`);
+      try {
+        const photo = await sweetbookClient.photos.upload(bookUid, file) as Record<string, unknown>;
+        photoRefs.push(extractPhotoRef(photo));
+        console.log(`[/api/sweetbook/books-from-data] Step 2: uploaded photo ${i + 1}/${imageUrls.length}`);
+      } catch (uploadErr: unknown) {
+        const apiErr = uploadErr as { details?: unknown; statusCode?: number; message?: string };
+        console.error(`[/api/sweetbook/books-from-data] Photo upload ${i + 1} failed:`, apiErr.statusCode, apiErr.message, JSON.stringify(apiErr.details));
+        throw uploadErr;
+      }
     }
 
     // Step 3: Create cover
