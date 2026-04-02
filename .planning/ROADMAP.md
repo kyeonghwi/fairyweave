@@ -86,6 +86,10 @@ Plans:
 **Requirements covered:** FORM-01~03, UI-01~03, DUM-01~03, AI-04
 **Done when:** 더미 북 선택 → 주문 완료까지 전체 플로우가 AI 생성 없이 동작한다
 
+**Plans:** 1 plan
+Plans:
+- [ ] 04-01-PLAN.md — Verify complete UI + dummy data implementation (9 components, 3 pages, 5 dummy books, books-from-data endpoint)
+
 ---
 
 ## Phase 5 — Polish + Submission Prep (Day 6-7: Apr 6-7)
