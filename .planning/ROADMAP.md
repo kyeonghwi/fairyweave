@@ -112,6 +112,11 @@ Plans:
 **Requirements covered:** DEV-01~05
 **Done when:** 구글폼 제출 완료
 
+**Plans:** 2 plans
+Plans:
+- [ ] 05-01-PLAN.md — Create .env.example files + README.md (DEV-01~05)
+- [ ] 05-02-PLAN.md — Finalize submission-log.md Google Form answers + manual test
+
 ---
 
 ## Risk Register
