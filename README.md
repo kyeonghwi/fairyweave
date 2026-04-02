@@ -1,0 +1,63 @@
+# FairyWeave
+
+부모가 아이 정보(이름, 나이, 테마, 교훈)를 입력하면 AI가 세상에 단 하나뿐인 맞춤 동화책을 생성하고, Sweetbook API로 실물 책을 주문할 수 있는 웹 서비스입니다.
+
+**타겟:** 0~7세 자녀를 둔 부모
+
+**주요 기능:**
+- Gemini AI 기반 16페이지 스토리 + 삽화 자동 생성
+- Sweetbook Print API 연동 실물 책 주문
+- 더미 데이터 5권으로 즉시 체험 가능
+
+## 실행 방법
+
+```bash
+# 1. 의존성 설치
+npm install && npm install --prefix frontend && npm install --prefix backend
+
+# 2. 환경변수 설정
+cp .env.example .env
+cp .env.example backend/.env
+# .env 파일을 열어 API 키를 입력하세요
+
+# 3. 개발 서버 실행
+npm run dev
+```
+
+프론트엔드: http://localhost:3000
+백엔드: http://localhost:3001
+
+## 사용한 Sweetbook API 엔드포인트
+
+| API 엔드포인트 | 용도 | 사용 시점 |
+|----------------|------|----------|
+| `POST /books` (books.create) | 빈 책 객체 생성, bookUid 획득 | Phase 3 |
+| `POST /books/:bookUid/photos` (photos.upload) | 삽화 이미지 16장 업로드 | Phase 3 |
+| `PUT /books/:bookUid/cover` (covers.create) | 표지 템플릿 적용 | Phase 3 |
+| `PUT /books/:bookUid/contents` (contents.insert) | 16페이지 본문 배치 | Phase 3 |
+| `POST /books/:bookUid/finalize` (books.finalize) | 책 확정 (편집 잠금) | Phase 3 |
+| `POST /orders` | 주문 생성 (Idempotency-Key 포함) | Phase 3 |
+
+## AI 도구 활용 내역
+
+| AI 도구 | 활용 내용 |
+|---------|----------|
+| Claude Code (Anthropic) | 프로젝트 전체 구현: 모노레포 설정, 백엔드 API, 프론트엔드 UI, Sweetbook 연동, 테스트 |
+| Gemini 2.5 Flash (Google) | 16페이지 동화 스토리 텍스트 생성 (메타-프롬프트 + JSON 출력) |
+| Gemini 2.5 Flash Image (Google) | 페이지별 삽화 이미지 생성 (base64 PNG) |
+
+## 설계 의도
+
+FairyWeave의 비즈니스 모델은 LTV > CAC 아비트리지에 기반합니다. AI 동화책 생성 비용(Gemini API 호출)은 권당 수십 원 수준이지만, 실물 책의 감성적 가치와 개인화 프리미엄이 결합되어 높은 고객 생애가치를 만듭니다. 반복 주문(형제, 생일, 기념일)이 자연스럽게 발생하는 구조입니다.
+
+Idempotency-Key를 주문 API에 적용하여 네트워크 오류 시 중복 주문을 방지했습니다. 부모가 안심하고 주문 버튼을 누를 수 있어야 서비스 신뢰가 형성됩니다.
+
+## 기술 스택
+
+| 영역 | 기술 |
+|------|------|
+| 프론트엔드 | Next.js 16, React, Tailwind CSS v4, TypeScript |
+| 백엔드 | Express, TypeScript, tsx (dev runner) |
+| AI | Google Gemini 2.5 Flash (텍스트), Gemini 2.5 Flash Image (이미지) |
+| 인쇄 API | Sweetbook Book Print API (bookprintapi-nodejs-sdk) |
+| 개발 도구 | Claude Code (AI 코딩 어시스턴트) |
