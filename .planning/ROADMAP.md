@@ -86,9 +86,9 @@ Plans:
 **Requirements covered:** FORM-01~03, UI-01~03, DUM-01~03, AI-04
 **Done when:** 더미 북 선택 → 주문 완료까지 전체 플로우가 AI 생성 없이 동작한다
 
-**Plans:** 1 plan
+**Plans:** 2/2 plans complete
 Plans:
-- [ ] 04-01-PLAN.md — Verify complete UI + dummy data implementation (9 components, 3 pages, 5 dummy books, books-from-data endpoint)
+- [x] 04-01-PLAN.md — Verify complete UI + dummy data implementation (9 components, 3 pages, 5 dummy books, books-from-data endpoint)
 
 ---
 
@@ -112,10 +112,10 @@ Plans:
 **Requirements covered:** DEV-01~05
 **Done when:** 구글폼 제출 완료
 
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 Plans:
 - [x] 05-01-PLAN.md — Create .env.example files + README.md (DEV-01~05)
-- [ ] 05-02-PLAN.md — Finalize submission-log.md Google Form answers + manual test
+- [x] 05-02-PLAN.md — Finalize submission-log.md Google Form answers + manual test
 
 ---
 
