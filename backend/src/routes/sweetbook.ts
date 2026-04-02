@@ -219,4 +219,140 @@ router.post('/sweetbook/orders', async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/sweetbook/books-from-data
+// Body: { pages, imageUrls, request, shipping }
+// Creates book + order in one call (for dummy books and direct-data ordering)
+// Response: { bookUid: string, orderUid: string }
+router.post('/sweetbook/books-from-data', async (req: Request, res: Response) => {
+  const { pages, imageUrls, request: bookRequest, shipping } = req.body as {
+    pages?: { pageNumber: number; text: string; imagePrompt: string }[];
+    imageUrls?: string[];
+    request?: { childName: string; age: number; theme: string; moral: string };
+    shipping?: {
+      recipientName: string;
+      recipientPhone: string;
+      postalCode: string;
+      address1: string;
+      address2?: string;
+      shippingMemo?: string;
+    };
+  };
+
+  // Validate required fields
+  if (!pages || !imageUrls || !bookRequest || !shipping) {
+    res.status(400).json({ error: 'pages, imageUrls, request, and shipping are all required' });
+    return;
+  }
+  if (!shipping.recipientName || !shipping.recipientPhone || !shipping.postalCode || !shipping.address1) {
+    res.status(400).json({ error: 'Missing required shipping fields' });
+    return;
+  }
+
+  const bookTitle = `${bookRequest.childName}의 동화책`;
+  console.log(`[/api/sweetbook/books-from-data] Starting flow for "${bookTitle}"`);
+
+  // Step 1: Create book
+  const bookResult = await sweetbookClient.books.create({
+    bookSpecUid: 'SQUAREBOOK_HC',
+    title: bookTitle,
+    creationType: 'TEST',
+  }).catch((err: unknown) => {
+    console.error('[/api/sweetbook/books-from-data] Step 1 (books.create) failed:', err);
+    throw err;
+  });
+
+  const bookUid = (bookResult.bookUid ?? bookResult.uid) as string | undefined;
+  if (!bookUid) {
+    res.status(500).json({ error: 'books.create returned no bookUid', raw: bookResult });
+    return;
+  }
+  console.log(`[/api/sweetbook/books-from-data] Step 1 done. bookUid=${bookUid}`);
+
+  try {
+    // Step 2: Upload images sequentially
+    const coverTemplateUid = process.env.SWEETBOOK_COVER_TEMPLATE_UID!;
+    const contentTemplateUid = process.env.SWEETBOOK_CONTENT_TEMPLATE_UID!;
+
+    const photoRefs: string[] = [];
+    for (let i = 0; i < imageUrls.length; i++) {
+      const file = dataUriToFile(imageUrls[i], `photo_${i + 1}.png`);
+      const photo = await sweetbookClient.photos.upload(bookUid, file) as Record<string, unknown>;
+      photoRefs.push(extractPhotoRef(photo));
+      console.log(`[/api/sweetbook/books-from-data] Step 2: uploaded photo ${i + 1}/${imageUrls.length}`);
+    }
+
+    // Step 3: Create cover
+    const year = new Date().getFullYear().toString();
+    await sweetbookClient.covers.create(bookUid, coverTemplateUid, {
+      coverPhoto: photoRefs[0], title: bookTitle, dateRange: year,
+    });
+    console.log(`[/api/sweetbook/books-from-data] Step 3: cover created`);
+
+    // Step 4: Insert content pages
+    const today = new Date().toISOString().slice(0, 10);
+    for (let i = 0; i < pages.length; i++) {
+      await sweetbookClient.contents.insert(bookUid, contentTemplateUid, {
+        photo1: photoRefs[i],
+        date: today,
+        title: `${i + 1}화`,
+        diaryText: pages[i].text,
+      }, { breakBefore: 'page' });
+    }
+    console.log(`[/api/sweetbook/books-from-data] Step 4: ${pages.length} pages inserted`);
+
+    // Step 4b: Pad to 24-page minimum
+    const BLANK_TEMPLATE_UID = '2mi1ao0Z4Vxl';
+    const blankCount = Math.max(0, 24 - pages.length);
+    for (let i = 0; i < blankCount; i++) {
+      await sweetbookClient.contents.insert(bookUid, BLANK_TEMPLATE_UID, {}, { breakBefore: 'page' });
+    }
+    if (blankCount > 0) {
+      console.log(`[/api/sweetbook/books-from-data] Step 4b: added ${blankCount} blank pages`);
+    }
+
+    // Step 5: Finalize
+    await sweetbookClient.books.finalize(bookUid);
+    console.log(`[/api/sweetbook/books-from-data] Step 5: book finalized`);
+
+    // Step 6: Create order
+    const externalRef = randomUUID();
+    const orderResult = await sweetbookClient.orders.create({
+      items: [{ bookUid, quantity: 1 }],
+      shipping: {
+        recipientName: shipping.recipientName,
+        recipientPhone: shipping.recipientPhone,
+        postalCode: shipping.postalCode,
+        address1: shipping.address1,
+        ...(shipping.address2 ? { address2: shipping.address2 } : {}),
+        ...(shipping.shippingMemo ? { shippingMemo: shipping.shippingMemo } : {}),
+      },
+      externalRef,
+    }) as Record<string, unknown>;
+
+    const orderUid = orderResult.orderUid as string | undefined;
+    if (!orderUid) {
+      res.status(500).json({ error: 'orders.create returned no orderUid', raw: orderResult });
+      return;
+    }
+
+    console.log(`[/api/sweetbook/books-from-data] Step 6: order created. orderUid=${orderUid}`);
+    res.json({ bookUid, orderUid });
+  } catch (err: unknown) {
+    console.error('[/api/sweetbook/books-from-data] Failed, rolling back:', err);
+    await sweetbookClient.books.delete(bookUid).catch((deleteErr: unknown) => {
+      console.error('[/api/sweetbook/books-from-data] Rollback delete failed (ignored):', deleteErr);
+    });
+
+    if (err instanceof SweetbookApiError) {
+      res.status(err.statusCode ?? 500).json({ error: err.message, details: err.details });
+    } else if (err instanceof SweetbookValidationError) {
+      res.status(400).json({ error: err.message, field: err.field });
+    } else if (err instanceof SweetbookNetworkError) {
+      res.status(502).json({ error: 'Sweetbook API network error', message: (err as Error).message });
+    } else {
+      res.status(500).json({ error: 'Book creation failed', message: (err as Error).message });
+    }
+  }
+});
+
 export const sweebookRouter = router;
