@@ -35,6 +35,10 @@
 | Claude Code | Phase 4 — 더미 데이터: 5권(공룡/우주/마법/바다/숲) × 16페이지 스토리 + SVG placeholder 이미지 | 2026-04-02 |
 | Claude Code | Phase 4 — POST /api/sweetbook/books-from-data 백엔드 엔드포인트 (더미북/직접 데이터 주문용) | 2026-04-02 |
 | Claude Code | Phase 4 — Next.js rewrites 프록시 설정 (프론트 /api/* → 백엔드 localhost:3001) | 2026-04-02 |
+| Claude Code | Phase 4 — Gemini JSON 파싱 강화: responseMimeType + 배열 추출 + trailing comma 제거 | 2026-04-02 |
+| Claude Code | Phase 4 — AI 생성 프록시 타임아웃 해결: generate-book을 백엔드 직접 호출로 변경 | 2026-04-02 |
+| Claude Code | Phase 4 — 책 데이터 전달: window.__bookCache로 create→book 페이지 간 데이터 핸드오프 (base64 이미지 sessionStorage 초과 해결) | 2026-04-02 |
+| Claude Code | Phase 4 — PageSlider object-cover → object-contain 변경 (AI 생성 이미지 잘림 방지) | 2026-04-02 |
 | Gemini 2.5 Flash | 텍스트 스토리 생성 API 호출 검증 | 2026-04-01 |
 | Gemini 2.5 Flash Image | 이미지 생성 API 호출 검증 (base64 PNG 반환 확인) | 2026-04-01 |
 
@@ -67,6 +71,9 @@
 > - Gemini 모델 버전 선택: gemini-2.0-flash → gemini-2.5-flash (신규 계정 404 이슈 해결)
 > - 이미지 생성에 gemini-2.5-flash-image 사용 (gemini-2.0-flash-exp 대신)
 > - SB-01 (GET /templates) 구현 방식: 런타임에 매번 GET /templates를 호출하는 대신, 샌드박스에서 1회 템플릿 목록 조회 후 UID를 env var에 저장. 템플릿 UID는 변경되지 않으므로 런타임 API 호출이 불필요하고, 요청마다 외부 호출을 줄여 응답 속도 개선.
+> - Gemini JSON 파싱 전략: LLM 출력을 raw JSON.parse 대신, responseMimeType 강제 + 배열 추출 + trailing comma 제거 3중 방어. LLM 출력은 항상 불완전한 JSON일 수 있다는 전제로 설계.
+> - AI 생성 엔드포인트 직접 호출: Next.js rewrites 프록시는 단순 API에 적합하지만, 수 분 걸리는 AI 생성에는 타임아웃 제어 불가. 장시간 요청만 백엔드 직접 호출로 분리.
+> - 페이지 간 데이터 전달: sessionStorage(5MB 제한)와 in-memory store(서버 재시작 시 소실) 모두 실패. window 객체에 임시 캐시하여 SPA 내비게이션에서 데이터 보존.
 > *(개발 진행에 따라 자동 추가)*
 
 ### 문항 4: AI 도구 사용 중 겪은 실패 또는 문제
@@ -86,3 +93,7 @@
 | 2026-04-01 | gemini-2.0-flash-exp 이미지 생성 안됨 | 모델 미지원 | gemini-2.5-flash-image로 교체 |
 | 2026-04-01 | gsd-tools 플랜 파일 미인식 | 파일명 형식 불일치 | `01-01-PLAN.md` 형식으로 변경 |
 | 2026-04-02 | SVG data URI btoa() InvalidCharacterError | 한글/이모지 포함 SVG를 btoa()로 base64 인코딩 시 실패 | encodeURIComponent() 방식으로 변경 |
+| 2026-04-02 | Gemini JSON 파싱 실패 (position 3548) | LLM이 trailing comma 포함 JSON 반환 | responseMimeType: 'application/json' + 배열 추출 + trailing comma 정규식 제거 |
+| 2026-04-02 | Next.js 프록시 ECONNRESET | AI 생성이 수 분 걸려 프록시 타임아웃 | generate-book 엔드포인트를 localhost:3001 직접 호출로 변경 |
+| 2026-04-02 | 책 페이지 "Failed to fetch" | tsx watch가 백엔드 재시작 → in-memory store 초기화 + sessionStorage 5MB 제한 초과 | window.__bookCache로 클라이언트 메모리 핸드오프 |
+| 2026-04-02 | PageSlider 이미지 양쪽 잘림 | object-cover + 고정 aspect-[3/4]가 AI 이미지 비율과 불일치 | object-contain으로 변경, 고정 비율 제거 |
