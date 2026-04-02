@@ -47,41 +47,29 @@
 ## 5. 설계 의도
 
 ### 왜 이 서비스를 선택했는지
-> (작성 필요)
+맞춤 동화책은 부모의 감성적 소비 욕구와 AI 생성의 저비용 구조가 만나는 접점입니다. Sweetbook API가 인쇄-배송을 처리하므로 재고 없이 주문형 생산이 가능합니다.
 
 ### 비즈니스 가능성
-> (작성 필요)
+AI 생성 비용은 권당 수십 원이지만 실물 동화책의 감성 가치는 수만 원입니다. 형제, 생일, 기념일마다 반복 주문이 발생하는 구조로 LTV가 높습니다.
 
 ### 시간이 더 있었다면 추가했을 기능
-> (작성 필요)
+Gemini 레퍼런스 이미지로 캐릭터 일관성 강화, 부모가 스토리를 직접 편집하는 co-creation 기능, Sweetbook Webhook으로 주문 상태 실시간 추적.
 
 ---
 
-## 구글폼 문항 초안
+## 구글폼 문항
 
 ### 문항 1: 과제 수행 과정
-> Phase 1에서는 Next.js 16 + Express 모노레포를 설정하고 Gemini API 연동을 검증했습니다.
-> gemini-2.0-flash 모델이 신규 계정에서 동작하지 않아 gemini-2.5-flash로 교체하는 트러블슈팅이 있었습니다.
-> *(개발 진행에 따라 자동 업데이트)*
+Phase 1에서 Next.js 16 + Express 모노레포를 구성하고 Gemini 2.5 Flash API 연동을 검증했습니다. Phase 2에서 메타-프롬프트 엔지니어링으로 16페이지 스토리 JSON 생성 파이프라인을 만들고, Promise.allSettled로 16장 삽화를 병렬 생성했습니다. Phase 3에서 Sweetbook SDK로 5-step 책 생성(create → upload → cover → contents → finalize) + 주문 플로우를 구현했습니다. Phase 4에서 프론트엔드 UI 3페이지(홈/생성/책 프리뷰+주문)와 더미 데이터 5권을 완성했습니다. Phase 5에서 README, .env.example, 제출 문서를 정리했습니다.
 
 ### 문항 2: API를 써보고 느낀 점
-> *(Book Print API 사용 후 자동 추가)*
+SDK에 TypeScript 타입 정의가 없어서 메서드 시그니처를 추측하며 .d.ts를 직접 작성해야 했습니다. books.create → photos.upload × 16 → covers.create → contents.insert × 16 → books.finalize로 이어지는 5단계 생성 플로우는 유연하지만 진입 장벽이 높습니다. 한 번의 API 호출로 책을 생성할 수 있는 convenience 메서드가 있으면 개발 속도가 크게 개선될 것입니다. 샌드박스 환경에서 creationType: 'TEST'로 과금 없이 테스트할 수 있어 안심하고 반복 실험이 가능했습니다. multipart 업로드 시 Blob이 아닌 File 객체를 요구하는 점은 문서에 명시되어 있지 않아 디버깅에 시간이 걸렸습니다.
 
 ### 문항 3: 과제에서 내린 가장 중요한 판단
-> - Gemini 모델 버전 선택: gemini-2.0-flash → gemini-2.5-flash (신규 계정 404 이슈 해결)
-> - 이미지 생성에 gemini-2.5-flash-image 사용 (gemini-2.0-flash-exp 대신)
-> - SB-01 (GET /templates) 구현 방식: 런타임에 매번 GET /templates를 호출하는 대신, 샌드박스에서 1회 템플릿 목록 조회 후 UID를 env var에 저장. 템플릿 UID는 변경되지 않으므로 런타임 API 호출이 불필요하고, 요청마다 외부 호출을 줄여 응답 속도 개선.
-> - Gemini JSON 파싱 전략: LLM 출력을 raw JSON.parse 대신, responseMimeType 강제 + 배열 추출 + trailing comma 제거 3중 방어. LLM 출력은 항상 불완전한 JSON일 수 있다는 전제로 설계.
-> - AI 생성 엔드포인트 직접 호출: Next.js rewrites 프록시는 단순 API에 적합하지만, 수 분 걸리는 AI 생성에는 타임아웃 제어 불가. 장시간 요청만 백엔드 직접 호출로 분리.
-> - 페이지 간 데이터 전달: sessionStorage(5MB 제한)와 in-memory store(서버 재시작 시 소실) 모두 실패. window 객체에 임시 캐시하여 SPA 내비게이션에서 데이터 보존.
-> *(개발 진행에 따라 자동 추가)*
+가장 중요한 판단은 Gemini JSON 파싱 전략이었습니다. LLM 출력이 항상 완벽한 JSON이 아니라는 전제로, responseMimeType 강제 + 배열 추출 + trailing comma 제거의 3중 방어를 설계했습니다. 두 번째는 AI 생성 엔드포인트를 Next.js 프록시 대신 백엔드 직접 호출로 분리한 것입니다. 수 분 걸리는 요청에 프록시 타임아웃이 맞지 않았고, 장시간 요청만 분리하여 나머지 API는 프록시의 편의성을 유지했습니다.
 
 ### 문항 4: AI 도구 사용 중 겪은 실패 또는 문제
-> - **문제**: gemini-2.0-flash 모델 호출 시 404 반환 ("no longer available to new users")
->   **해결**: ListModels API로 사용 가능한 모델 목록 조회 후 gemini-2.5-flash로 교체
-> - **문제**: gsd-tools가 `01-PLAN-1-*.md` 형식의 플랜 파일을 인식하지 못함
->   **해결**: `01-01-PLAN.md` 형식으로 파일명 변경
-> *(개발 진행에 따라 자동 추가)*
+Gemini 2.0 Flash가 신규 계정에서 404를 반환하여 ListModels API로 사용 가능 모델을 확인한 뒤 2.5 Flash로 교체했습니다. LLM이 trailing comma가 포함된 JSON을 반환하여 파싱이 실패했고, responseMimeType 강제와 정규식 후처리로 해결했습니다. Next.js rewrites 프록시가 AI 생성의 긴 응답 시간에 ECONNRESET을 발생시켜, 해당 엔드포인트만 백엔드 직접 호출로 변경했습니다. 16장의 base64 이미지가 sessionStorage 5MB 제한을 초과하여, window 객체에 임시 캐시하는 방식으로 페이지 간 데이터를 전달했습니다.
 
 ---
 
