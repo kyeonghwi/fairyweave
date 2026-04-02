@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Phase 4 UI-SPEC approved
-last_updated: "2026-04-02T11:54:44.011Z"
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-04-02T14:14:03.298Z"
 progress:
-  total_phases: 4
+  total_phases: 5
   completed_phases: 4
-  total_plans: 7
-  completed_plans: 8
+  total_plans: 9
+  completed_plans: 9
 ---
 
 # Project State: FairyWeave
@@ -19,11 +19,11 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-01)
 
 **Core value:** 부모가 입력한 아이 정보로 세상에 단 하나뿐인 동화책을 3분 안에 만들어 주문할 수 있어야 한다.
-**Current focus:** Phase 04 — frontend-ui-dummy-data
+**Current focus:** Phase 05 — polish-submission-prep
 
 ## Progress
 
-[██████░░░░] 60% (3/5 phases complete)
+[█████████░] 90% (4/5 phases complete, Phase 5 in progress)
 
 ## Phase Status
 
@@ -32,8 +32,8 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 | 1 | Project Setup & Gemini API Spike | ✓ Complete | 2/2 |
 | 2 | AI Generation Pipeline | ✓ Complete | 2/2 |
 | 3 | Sweetbook API Integration | ✓ Complete | 2/2 |
-| 4 | Frontend UI + Dummy Data | ○ Pending | 0/0 |
-| 5 | Polish + Submission Prep | ○ Pending | 0/0 |
+| 4 | Frontend UI + Dummy Data | ✓ Complete | 2/2 |
+| 5 | Polish + Submission Prep | ◐ In Progress | 1/2 |
 
 ## Decisions Log
 
@@ -55,6 +55,7 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 - **Phase 03-02:** Lazy Proxy singleton for sweetbookClient fixes dotenv import-order race without changing startup sequence
 - **Phase 03-02:** File instead of Blob for photo upload — Sweetbook multipart requires filename in Content-Disposition
 - **Phase 03-02:** Step 4b blank pages (template 2mi1ao0Z4Vxl) pads 16 content pages to 24-page SQUAREBOOK_HC minimum
+- **Phase 05-01:** Korean-only README prose with English code blocks (D-01), no screenshots/GIFs (D-02), SWEETBOOK_ENV=sandbox as default in .env.example
 
 ## Blockers
 
@@ -70,10 +71,11 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 | 02-ai-generation-pipeline | 02 | 8min | 2 | 3 |
 | 03-sweetbook-api-integration | 01 | 8min | 2 | 5 |
 | 03-sweetbook-api-integration | 02 | 30min | 3 | 4 |
+| 05-polish-submission-prep | 01 | 5min | 2 | 3 |
 
 ## Last Session
 
-- **Stopped at:** Phase 4 UI-SPEC approved
+- **Stopped at:** Completed 05-01-PLAN.md
 - **Timestamp:** 2026-04-01T12:44:00Z
 
 ---

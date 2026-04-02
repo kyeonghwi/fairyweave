@@ -40,11 +40,11 @@
 
 ### Developer Experience
 
-- [ ] **DEV-01**: .env.example 파일에 필요한 환경변수 키 목록이 포함되어 있다 (값은 비어있음)
-- [ ] **DEV-02**: README.md의 안내대로 npm install + .env 설정 + npm run dev 만으로 실행 가능하다
-- [ ] **DEV-03**: README.md에 사용한 Sweetbook API 엔드포인트 목록이 표로 정리되어 있다
-- [ ] **DEV-04**: README.md에 AI 도구 활용 내역이 표로 정리되어 있다
-- [ ] **DEV-05**: README.md에 설계 의도(LTV > CAC 아비트리지 비즈니스 모델)가 기술되어 있다
+- [x] **DEV-01**: .env.example 파일에 필요한 환경변수 키 목록이 포함되어 있다 (값은 비어있음)
+- [x] **DEV-02**: README.md의 안내대로 npm install + .env 설정 + npm run dev 만으로 실행 가능하다
+- [x] **DEV-03**: README.md에 사용한 Sweetbook API 엔드포인트 목록이 표로 정리되어 있다
+- [x] **DEV-04**: README.md에 AI 도구 활용 내역이 표로 정리되어 있다
+- [x] **DEV-05**: README.md에 설계 의도(LTV > CAC 아비트리지 비즈니스 모델)가 기술되어 있다
 
 ## v2 Requirements
 
