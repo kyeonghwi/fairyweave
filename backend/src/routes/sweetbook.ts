@@ -195,8 +195,37 @@ function extractOrderResponse(orderResult: Record<string, unknown>) {
   };
 }
 
+// Call POST /orders/estimate before creating an order to verify sufficient credits.
+// Throws a 402 error with a Korean message if credits are insufficient.
+async function checkCreditSufficiency(
+  bookUid: string,
+  shipping: { recipientName: string; recipientPhone: string; postalCode: string; address1: string; address2?: string },
+): Promise<void> {
+  const estimateResult = await sweetbookClient.orders.estimate({
+    items: [{ bookUid, quantity: 1 }],
+    shipping,
+  }) as Record<string, unknown>;
+
+  const creditSufficient = estimateResult.creditSufficient as boolean | undefined;
+  if (creditSufficient === false) {
+    const totalAmount = estimateResult.totalAmount as number | undefined;
+    const available = estimateResult.availableCredits as number | undefined;
+    const err = Object.assign(
+      new Error(
+        `크레딧 잔액이 부족합니다. Sweetbook 파트너 포털에서 충전 후 다시 시도해주세요. (필요: ${totalAmount ?? '?'}원, 현재: ${available ?? '?'}원)`
+      ),
+      { statusCode: 402 },
+    );
+    throw err;
+  }
+}
+
 // Map Sweetbook SDK errors to HTTP responses
 function handleSweetbookError(err: unknown, res: Response): void {
+  if ((err as { statusCode?: number }).statusCode === 402) {
+    res.status(402).json({ error: (err as Error).message });
+    return;
+  }
   if (err instanceof SweetbookApiError) {
     res.status(err.statusCode ?? 500).json({ error: err.message, details: err.details });
   } else if (err instanceof SweetbookValidationError) {
@@ -266,6 +295,14 @@ router.post('/sweetbook/orders', async (req: Request, res: Response) => {
   console.log(`[/api/sweetbook/orders] Creating order for bookUid=${bookUid}`);
 
   try {
+    await checkCreditSufficiency(bookUid!, {
+      recipientName: recipientName!,
+      recipientPhone: recipientPhone!,
+      postalCode: postalCode!,
+      address1: address1!,
+      ...(address2 ? { address2 } : {}),
+    });
+
     const externalRef = randomUUID();
 
     const orderResult = await sweetbookClient.orders.create({
@@ -331,6 +368,15 @@ router.post('/sweetbook/books-from-data', async (req: Request, res: Response) =>
 
   try {
     const bookUid = await createSweetbookBook(bookTitle, pages, imageUrls, '/api/sweetbook/books-from-data', bookSpecUid, coverImageUrl);
+
+    // Verify credits before placing order
+    await checkCreditSufficiency(bookUid, {
+      recipientName: shipping.recipientName,
+      recipientPhone: shipping.recipientPhone,
+      postalCode: shipping.postalCode,
+      address1: shipping.address1,
+      ...(shipping.address2 ? { address2: shipping.address2 } : {}),
+    });
 
     // Create order
     const externalRef = randomUUID();
