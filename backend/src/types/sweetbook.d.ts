@@ -44,6 +44,23 @@ declare module 'bookprintapi-nodejs-sdk' {
 
   export interface OrderResult {
     orderUid?: string;
+    totalProductAmount?: number;
+    totalShippingFee?: number;
+    totalPackagingFee?: number;
+    totalAmount?: number;
+    orderStatus?: number | string;
+    orderStatusDisplay?: string;
+    items?: Array<{
+      bookUid?: string;
+      bookTitle?: string;
+      quantity?: number;
+      pageCount?: number;
+      unitPrice?: number;
+      itemAmount?: number;
+      [key: string]: unknown;
+    }>;
+    recipientName?: string;
+    address1?: string;
     [key: string]: unknown;
   }
 
@@ -77,6 +94,7 @@ declare module 'bookprintapi-nodejs-sdk' {
     };
     orders: {
       create(params: OrderCreateParams): Promise<OrderResult>;
+      get(orderUid: string): Promise<OrderResult>;
     };
     credits: {
       sandboxCharge(amount: number, description: string): Promise<unknown>;
