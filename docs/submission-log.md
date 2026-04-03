@@ -11,6 +11,8 @@
 | `POST /books` | 책 객체 생성 (bookUid 획득): books.create → photos.upload × 16 → covers.create → contents.insert × 16 → books.finalize | Phase 3 |
 | `POST /orders` | 주문 전송 (Idempotency-Key SDK 자동 삽입, externalRef UUIDv4 포함) | Phase 3 |
 | `POST /books` + `POST /orders` | books-from-data 통합 엔드포인트: 더미북/AI북 데이터를 직접 받아 책 생성 + 주문까지 한 번에 처리 | Phase 4 |
+| `GET /templates?bookSpecUid=` | 책 사양별 템플릿 UID 동적 조회 (cover/content 템플릿 자동 매칭) | Phase 5 |
+| `GET /orders/:orderUid` | 주문 상태 및 가격 정보 조회 | Phase 5 |
 
 ---
 
@@ -41,6 +43,14 @@
 | Claude Code | Phase 4 — PageSlider object-cover → object-contain 변경 (AI 생성 이미지 잘림 방지) | 2026-04-02 |
 | Claude Code | Phase 5 — SVG→PNG placeholder 변환 버그픽스: MIME 타입 regex 수정 + zlib 512x512 PNG 런타임 생성으로 Sweetbook photo upload 400/500 해결 | 2026-04-03 |
 | Claude Code | Phase 5 — CEO 리뷰 후 코드 품질 개선: sweetbook.ts DRY 리팩토링(공유 함수 추출), moral 필드 버그 수정, 만료 책 UX 개선, 고아 파일 제거, 유닛 테스트 11개 추가 | 2026-04-03 |
+| Claude Code | Phase 5 — 멀티 책 사양 지원: BookSpecUid 타입 (SQUAREBOOK_HC, PHOTOBOOK_A4_SC, PHOTOBOOK_A5_SC), 사양별 템플릿 API 동적 조회, 프론트엔드 포맷 선택 UI | 2026-04-03 |
+| Claude Code | Phase 5 — 비동기 생성 + 폴링: generate-book이 bookId 즉시 반환, 백그라운드 생성 진행률을 GET /status로 폴링, 프론트엔드 프로그레스 바 표시 | 2026-04-03 |
+| Claude Code | Phase 5 — 표지 이미지 분리: storyGenerator가 coverImagePrompt 반환, generateCoverImage 별도 생성, Sweetbook에 커버 전용 이미지 업로드 | 2026-04-03 |
+| Claude Code | Phase 5 — 이미지 생성 개선: 동시 4개 워커 풀, 429 rate limit 시 지수 백오프 재시도 (최대 2회) | 2026-04-03 |
+| Claude Code | Phase 5 — bookStore TTL + 용량 제한: 30분 만료, 최대 20권, 메모리 누수 방지 | 2026-04-03 |
+| Claude Code | Phase 5 — 프론트엔드 한국어 전면 현지화: 네비게이션, 푸터, 생성 폼, 책 뷰어, 홈페이지 | 2026-04-03 |
+| Claude Code | Phase 5 — 주문 가격 표시: orders API 응답에서 totalAmount, unitPrice, pageCount 추출하여 UI에 표시 | 2026-04-03 |
+| Claude Code | Phase 5 — 입력 검증 강화: storyGenerator 입력 sanitize (제어문자/템플릿 문자 제거), age 상한 12→10 조정 | 2026-04-03 |
 | Gemini 2.5 Flash | 텍스트 스토리 생성 API 호출 검증 | 2026-04-01 |
 | Gemini 2.5 Flash Image | 이미지 생성 API 호출 검증 (base64 PNG 반환 확인) | 2026-04-01 |
 
@@ -62,13 +72,13 @@ Gemini 레퍼런스 이미지로 캐릭터 일관성 강화, 부모가 스토리
 ## 구글폼 문항
 
 ### 문항 1: 과제 수행 과정
-Phase 1에서 Next.js 16 + Express 모노레포를 구성하고 Gemini 2.5 Flash API 연동을 검증했습니다. Phase 2에서 메타-프롬프트 엔지니어링으로 16페이지 스토리 JSON 생성 파이프라인을 만들고, Promise.allSettled로 16장 삽화를 병렬 생성했습니다. Phase 3에서 Sweetbook SDK로 5-step 책 생성(create → upload → cover → contents → finalize) + 주문 플로우를 구현했습니다. Phase 4에서 프론트엔드 UI 3페이지(홈/생성/책 프리뷰+주문)와 더미 데이터 5권을 완성했습니다. Phase 5에서 README, .env.example, 제출 문서를 정리했습니다.
+Phase 1에서 Next.js 16 + Express 모노레포를 구성하고 Gemini 2.5 Flash API 연동을 검증했습니다. Phase 2에서 메타-프롬프트 엔지니어링으로 16페이지 스토리 JSON 생성 파이프라인을 만들고, Promise.allSettled로 16장 삽화를 병렬 생성했습니다. Phase 3에서 Sweetbook SDK로 5-step 책 생성(create → upload → cover → contents → finalize) + 주문 플로우를 구현했습니다. Phase 4에서 프론트엔드 UI 3페이지(홈/생성/책 프리뷰+주문)와 더미 데이터 5권을 완성했습니다. Phase 5에서 멀티 책 사양(3종), 비동기 생성+폴링 UX, 표지 이미지 분리, 이미지 동시생성 워커 풀, 한국어 현지화, 주문 가격 표시를 추가하고 제출 문서를 정리했습니다.
 
 ### 문항 2: API를 써보고 느낀 점
 SDK에 TypeScript 타입 정의가 없어서 메서드 시그니처를 추측하며 .d.ts를 직접 작성해야 했습니다. books.create → photos.upload × 16 → covers.create → contents.insert × 16 → books.finalize로 이어지는 5단계 생성 플로우는 유연하지만 진입 장벽이 높습니다. 한 번의 API 호출로 책을 생성할 수 있는 convenience 메서드가 있으면 개발 속도가 크게 개선될 것입니다. 샌드박스 환경에서 creationType: 'TEST'로 과금 없이 테스트할 수 있어 안심하고 반복 실험이 가능했습니다. multipart 업로드 시 Blob이 아닌 File 객체를 요구하는 점은 문서에 명시되어 있지 않아 디버깅에 시간이 걸렸습니다.
 
 ### 문항 3: 과제에서 내린 가장 중요한 판단
-가장 중요한 판단은 Gemini JSON 파싱 전략이었습니다. LLM 출력이 항상 완벽한 JSON이 아니라는 전제로, responseMimeType 강제 + 배열 추출 + trailing comma 제거의 3중 방어를 설계했습니다. 두 번째는 AI 생성 엔드포인트를 Next.js 프록시 대신 백엔드 직접 호출로 분리한 것입니다. 수 분 걸리는 요청에 프록시 타임아웃이 맞지 않았고, 장시간 요청만 분리하여 나머지 API는 프록시의 편의성을 유지했습니다.
+가장 중요한 판단은 Gemini JSON 파싱 전략이었습니다. LLM 출력이 항상 완벽한 JSON이 아니라는 전제로, responseMimeType 강제 + 배열 추출 + trailing comma 제거의 3중 방어를 설계했습니다. 두 번째는 AI 생성 엔드포인트를 Next.js 프록시 대신 백엔드 직접 호출로 분리한 것입니다. 수 분 걸리는 요청에 프록시 타임아웃이 맞지 않았고, 장시간 요청만 분리하여 나머지 API는 프록시의 편의성을 유지했습니다. 세 번째는 generate-book을 비동기 폴링 방식으로 전환한 것입니다. bookId를 즉시 반환하고 백그라운드에서 생성하면서 progress 엔드포인트로 상태를 노출하여, 사용자가 긴 대기 시간 동안 진행 상황을 확인할 수 있게 했습니다. 네 번째는 템플릿 UID를 env var 하드코딩에서 API 동적 조회로 전환한 것입니다. 멀티 책 사양 지원 시 사양마다 env var를 관리하는 것은 확장성이 없어, 시작 시 API로 조회하되 env var를 fallback으로 두는 방식을 선택했습니다.
 
 ### 문항 4: AI 도구 사용 중 겪은 실패 또는 문제
 Gemini 2.0 Flash가 신규 계정에서 404를 반환하여 ListModels API로 사용 가능 모델을 확인한 뒤 2.5 Flash로 교체했습니다. LLM이 trailing comma가 포함된 JSON을 반환하여 파싱이 실패했고, responseMimeType 강제와 정규식 후처리로 해결했습니다. Next.js rewrites 프록시가 AI 생성의 긴 응답 시간에 ECONNRESET을 발생시켜, 해당 엔드포인트만 백엔드 직접 호출로 변경했습니다. 16장의 base64 이미지가 sessionStorage 5MB 제한을 초과하여, window 객체에 임시 캐시하는 방식으로 페이지 간 데이터를 전달했습니다.
