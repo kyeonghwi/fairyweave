@@ -119,6 +119,85 @@ Plans:
 
 ---
 
+## Phase 6 — Book Viewer (3D Page-flip)
+
+**Goal:** 실제 책처럼 넘기는 3D 북 뷰어 구현
+
+**Depends on:** Phase 4
+**Plans:** 1/1 plans complete
+Plans:
+- [x] 06-01-PLAN.md — Realistic open-book spread with 3D CSS page-flip animation
+
+---
+
+## Phase 7 — Credits API + Dev Environment
+
+**Goal:** POST /orders/estimate로 주문 전 크레딧 잔액 검증 추가, GET /book-specs 로컬 엔드포인트 노출
+
+**Deliverables:**
+- 루트 `package.json`에 concurrently 추가 — `npm run dev` 한 번으로 프론트(3000) + 백(3001) 동시 실행 (이미 완료)
+- `POST /orders/estimate` 연동 — 주문 전 sandbox 잔액 확인, 부족 시 402 에러 메시지
+- `GET /api/sweetbook/book-specs` 로컬 엔드포인트 — BOOK_SPECS 상수 반환
+
+**Depends on:** Phase 5
+**Plans:** 1 plan
+
+Plans:
+- [ ] 07-01-PLAN.md — Estimate-based credit check + book-specs endpoint + SDK type additions
+
+---
+
+## Phase 8 — Bilingual Book + Vocabulary Page
+
+**Goal:** 영어/한국어/이중언어 모드 + 단어장 자동 생성으로 에듀테크 가치 추가
+
+**Deliverables:**
+- 책 생성 폼에 언어 옵션 [한국어 / 영어 / 이중언어] 추가
+- 이중언어 모드: 페이지 상단 영어, 하단 한국어
+- Gemini 프롬프트에 핵심 영단어 5개 + 뜻 JSON 반환 요청
+- 책 마지막 페이지에 Vocabulary 섹션 자동 렌더링
+
+**Depends on:** Phase 7
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 8 to break down)
+
+---
+
+## Phase 9 — Parent Letter + Photo Dedication Page
+
+**Goal:** 아이 사진 + 부모님 편지로 개인화된 헌정 페이지 추가
+
+**Deliverables:**
+- 생성 폼에 아이 사진 업로드 + 부모님 편지 텍스트 에디터 추가
+- 책 첫/마지막 페이지에 폴라로이드 프레임 스타일 사진 + 편지 렌더링
+
+**Depends on:** Phase 8
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 9 to break down)
+
+---
+
+## Phase 10 — Webhook Order Tracking
+
+**Goal:** Webhook으로 실시간 주문 상태 트래킹 UI 구현
+
+**Deliverables:**
+- Express 백엔드에 `POST /api/webhooks/sweetbook` 엔드포인트
+- Sweetbook 파트너 포털에서 Webhook URL 등록
+- 주문 완료 페이지에 SSE/폴링 기반 상태 트래킹 UI (주문 접수 → 인쇄 중 → 발송 완료)
+
+**Depends on:** Phase 9
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 10 to break down)
+
+---
+
 ## Risk Register
 
 | Risk | Likelihood | Impact | Mitigation |
@@ -127,6 +206,7 @@ Plans:
 | Gemini 이미지 생성 rate limit | Medium | Medium | 더미 데이터로 우회, 생성 테스트는 최소화 |
 | Gemini 이미지 URL 만료 | Low | Low | 샌드박스 데모 범위에서 허용 |
 | Phase 4 UI 작업 지연 | Medium | Medium | Phase 3까지 완료하면 Phase 5 일부 병렬 진행 가능 |
+| Webhook 등록 불가 (sandbox 제한) | High | Low | 엔드포인트 구현 후 수동 시뮬레이션으로 대체 |
 
 ---
 *Roadmap created: 2026-04-01*
