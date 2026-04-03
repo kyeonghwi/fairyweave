@@ -52,6 +52,7 @@
 | Claude Code | Phase 5 — 주문 가격 표시: orders API 응답에서 totalAmount, unitPrice, pageCount 추출하여 UI에 표시 | 2026-04-03 |
 | Claude Code | Phase 5 — 입력 검증 강화: storyGenerator 입력 sanitize (제어문자/템플릿 문자 제거), age 상한 12→10 조정 | 2026-04-03 |
 | Claude Code | Phase 6 — 실제 동화책 레이아웃 조사 후 BookViewer 구현: 데스크탑 오픈북 spread(좌=일러스트/우=텍스트), CSS 3D flipForward/flipBackward 페이지 넘김 애니메이션, 모바일 이미지+텍스트 오버레이 뷰 | 2026-04-03 |
+| Claude Code | Phase 6 — 페이지 넘김 애니메이션 버그픽스: back-face 미러링 제거, z-index 타이밍 조정, translateX 방향 수정으로 자연스러운 플립 동작 완성 | 2026-04-03 |
 | Gemini 2.5 Flash | 텍스트 스토리 생성 API 호출 검증 | 2026-04-01 |
 | Gemini 2.5 Flash Image | 이미지 생성 API 호출 검증 (base64 PNG 반환 확인) | 2026-04-01 |
 
