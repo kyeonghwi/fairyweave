@@ -1,25 +1,25 @@
 export default function Footer() {
   return (
     <footer className="w-full rounded-t-xl bg-surface-container-low mt-16">
-      <div className="flex flex-col md:flex-row justify-between items-center px-12 py-16 gap-8 max-w-7xl mx-auto">
-        <div className="flex flex-col items-center md:items-start gap-2">
+      <div className="flex flex-col md:flex-row justify-between items-center px-12 py-16 gap-8 w-full max-w-7xl mx-auto">
+        <div className="flex flex-col items-center md:items-start gap-4">
           <div className="font-jua text-2xl text-on-surface">FairyWeave</div>
-          <p className="text-sm font-medium text-secondary">
-            Hand-crafted with magic for the ones you love most.
+          <p className="text-sm font-medium text-secondary max-w-xs text-center md:text-left">
+            소중한 우리 아이를 위한 세상에 하나뿐인 동화책
           </p>
         </div>
         <div className="flex flex-wrap justify-center gap-8">
-          <span className="text-sm font-medium text-secondary hover:text-primary transition-colors cursor-pointer">
-            Our Story
+          <span className="text-sm font-medium text-secondary">
+            서비스 소개
           </span>
-          <span className="text-sm font-medium text-secondary hover:text-primary transition-colors cursor-pointer">
-            Shipping
+          <span className="text-sm font-medium text-secondary">
+            배송 안내
           </span>
-          <span className="text-sm font-medium text-secondary hover:text-primary transition-colors cursor-pointer">
-            Privacy
+          <span className="text-sm font-medium text-secondary">
+            개인정보처리방침
           </span>
-          <span className="text-sm font-medium text-secondary hover:text-primary transition-colors cursor-pointer">
-            Help
+          <span className="text-sm font-medium text-secondary">
+            고객센터
           </span>
         </div>
         <div className="flex gap-4">

@@ -11,6 +11,12 @@ import ThemeChip from '../../components/ThemeChip';
 import ProgressBar from '../../components/ProgressBar';
 import ErrorBanner from '../../components/ErrorBanner';
 
+const BOOK_SPECS = [
+  { uid: 'SQUAREBOOK_HC', label: '정사각 하드커버', desc: '243×248mm · 24~130쪽', emoji: '📕' },
+  { uid: 'PHOTOBOOK_A4_SC', label: 'A4 소프트커버', desc: '210×297mm · 24~130쪽', emoji: '📖' },
+  { uid: 'PHOTOBOOK_A5_SC', label: 'A5 소프트커버', desc: '148×210mm · 50~200쪽', emoji: '📓' },
+] as const;
+
 const THEMES = [
   { emoji: '🦕', label: '공룡' },
   { emoji: '🚀', label: '우주' },
@@ -30,11 +36,15 @@ export default function CreatePage() {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
 
+  const [bookSpecUid, setBookSpecUid] = useState('SQUAREBOOK_HC');
+  const [pageCount, setPageCount] = useState(16);
+  const [bookTitle, setBookTitle] = useState('');
   const [childName, setChildName] = useState('');
   const [age, setAge] = useState('');
   const [selectedTheme, setSelectedTheme] = useState('');
   const [customTheme, setCustomTheme] = useState('');
   const [moral, setMoral] = useState('');
+  const [generateImages, setGenerateImages] = useState(true);
   const [errors, setErrors] = useState<FormErrors>({});
 
   // Loading state
@@ -83,17 +93,20 @@ export default function CreatePage() {
           setProgress(10);
           setStepText('이야기를 쓰고 있어요...');
         } else if (status.step === 'images') {
-          const pct = 15 + Math.round((status.imagesCompleted / status.totalImages) * 80);
+          const pct = 15 + Math.round((status.imagesCompleted / status.totalImages) * 75);
           setProgress(pct);
           setStepText(`삽화를 그리고 있어요 (${status.imagesCompleted}/${status.totalImages})`);
+        } else if (status.step === 'cover') {
+          setProgress(92);
+          setStepText('표지를 만들고 있어요...');
         } else if (status.step === 'done') {
           stopPolling();
           setProgress(100);
           setStepText('완성!');
           setTimeout(() => router.push(`/book/${id}`), 600);
         }
-      } catch {
-        // Network error — keep polling, might recover
+      } catch (err) {
+        console.warn('[FairyWeave] polling error, will retry:', err);
       }
     }, 2000);
   }
@@ -123,6 +136,10 @@ export default function CreatePage() {
           age: Number(age),
           theme: effectiveTheme.trim(),
           moral: moral.trim(),
+          skipImages: !generateImages,
+          bookSpecUid,
+          pageCount,
+          title: bookTitle.trim() || undefined,
         }),
       });
 
@@ -182,6 +199,66 @@ export default function CreatePage() {
             )}
 
             <form ref={formRef} onSubmit={handleSubmit} className="space-y-5" noValidate>
+              {/* 판형 선택 */}
+              <FormField label="판형 선택" required>
+                <div className="grid gap-2">
+                  {BOOK_SPECS.map((spec) => (
+                    <button
+                      key={spec.uid}
+                      type="button"
+                      onClick={() => setBookSpecUid(spec.uid)}
+                      className={`flex items-center gap-3 rounded-xl px-4 py-3 border text-left transition-colors
+                        ${bookSpecUid === spec.uid
+                          ? 'border-primary bg-primary-container/20 ring-2 ring-primary/20'
+                          : 'border-outline-variant bg-surface-container-highest hover:border-outline'}`}
+                    >
+                      <span className="text-2xl">{spec.emoji}</span>
+                      <div>
+                        <p className={`text-sm font-medium ${bookSpecUid === spec.uid ? 'text-primary' : 'text-on-surface'}`}>
+                          {spec.label}
+                        </p>
+                        <p className="text-xs text-on-surface-variant">{spec.desc}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </FormField>
+
+              {/* 페이지 수 */}
+              <FormField label="페이지 수" required>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min={8}
+                    max={40}
+                    step={2}
+                    value={pageCount}
+                    onChange={(e) => setPageCount(Number(e.target.value))}
+                    className="flex-1 accent-primary"
+                  />
+                  <span className="text-sm font-medium text-on-surface w-16 text-center bg-surface-container-highest rounded-lg py-1.5">
+                    {pageCount}쪽
+                  </span>
+                </div>
+                <p className="text-xs text-on-surface-variant mt-1">
+                  페이지가 많을수록 생성 시간이 길어져요
+                </p>
+              </FormField>
+
+              {/* 책 제목 */}
+              <FormField label="책 제목">
+                <input
+                  type="text"
+                  value={bookTitle}
+                  onChange={(e) => setBookTitle(e.target.value)}
+                  placeholder="비워두면 AI가 이야기에 맞는 제목을 만들어요"
+                  maxLength={50}
+                  className="w-full rounded-xl px-4 py-3 bg-surface-container-highest border border-outline-variant text-base
+                    placeholder:text-outline focus:border-primary focus:ring-2 focus:ring-primary/20
+                    transition-colors outline-none"
+                />
+              </FormField>
+
               {/* 아이 이름 */}
               <FormField label="아이 이름" required error={errors.childName}>
                 <input
@@ -261,6 +338,27 @@ export default function CreatePage() {
                   비워두셔도 괜찮아요. AI가 따뜻한 이야기를 만들어 드릴게요.
                 </p>
               </FormField>
+
+              {/* 삽화 생성 토글 */}
+              <div className="flex items-center justify-between rounded-xl px-4 py-3 bg-surface-container-highest border border-outline-variant">
+                <div>
+                  <p className="text-sm font-medium text-on-surface">AI 삽화 생성</p>
+                  <p className="text-xs text-on-surface-variant">끄면 토큰을 절약할 수 있어요</p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={generateImages}
+                  onClick={() => setGenerateImages(!generateImages)}
+                  className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full transition-colors duration-200
+                    ${generateImages ? 'bg-primary' : 'bg-outline/40'}`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform transition-transform duration-200 mt-1
+                      ${generateImages ? 'translate-x-6 ml-0' : 'translate-x-1'}`}
+                  />
+                </button>
+              </div>
 
               {/* Submit */}
               <Button type="submit" size="lg" className="w-full mt-8">

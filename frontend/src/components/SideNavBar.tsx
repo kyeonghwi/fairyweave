@@ -1,10 +1,10 @@
 type StepKey = 'preview' | 'details' | 'shipping' | 'complete';
 
 const SIDE_STEPS = [
-  { key: 'preview' as const, label: 'Preview', icon: 'auto_stories' },
-  { key: 'details' as const, label: 'Order Details', icon: 'receipt_long' },
-  { key: 'shipping' as const, label: 'Shipping', icon: 'local_shipping' },
-  { key: 'complete' as const, label: 'Confirmation', icon: 'auto_awesome' },
+  { key: 'preview' as const, label: '동화책 미리보기', icon: 'auto_stories' },
+  { key: 'details' as const, label: '주문 상세', icon: 'receipt_long' },
+  { key: 'shipping' as const, label: '배송 정보', icon: 'local_shipping' },
+  { key: 'complete' as const, label: '주문 완료', icon: 'auto_awesome' },
 ];
 
 interface SideNavBarProps {
@@ -18,8 +18,8 @@ export default function SideNavBar({ currentStep, onStepClick }: SideNavBarProps
   return (
     <aside className="hidden lg:flex flex-col py-8 h-screen w-64 border-r border-outline-variant/15 bg-surface-container-low sticky top-20 shrink-0">
       <div className="px-6 mb-8">
-        <h2 className="text-primary font-jua text-xl">Your Journey</h2>
-        <p className="text-secondary text-sm">Creating the magic</p>
+        <h2 className="text-primary font-jua text-xl">주문 진행</h2>
+        <p className="text-secondary text-sm">마법 같은 동화책 만들기</p>
       </div>
       <nav className="flex flex-col gap-2">
         {SIDE_STEPS.map((step, i) => {

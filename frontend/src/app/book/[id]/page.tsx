@@ -49,6 +49,13 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
   const [orderLoading, setOrderLoading] = useState(false);
   const [orderApiError, setOrderApiError] = useState('');
   const [orderUid, setOrderUid] = useState('');
+  const [orderPricing, setOrderPricing] = useState<{
+    totalProductAmount?: number;
+    totalShippingFee?: number;
+    totalAmount?: number;
+    orderStatusDisplay?: string;
+    pageCount?: number;
+  } | null>(null);
 
   useEffect(() => {
     // Try dummy book first
@@ -71,7 +78,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
     if (cached && (cached.bookId === id)) {
       setBook({
         id: cached.bookId,
-        title: `${cached.request?.childName || '아이'}의 동화책`,
+        title: cached.title || `${cached.request?.childName || '아이'}의 동화책`,
         childName: cached.request?.childName || '',
         theme: cached.request?.theme || '',
         pages: cached.pages,
@@ -91,7 +98,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
       .then((data) => {
         setBook({
           id: data.id,
-          title: `${data.request.childName}의 동화책`,
+          title: data.title || `${data.request.childName}의 동화책`,
           childName: data.request.childName,
           theme: data.request.theme,
           pages: data.pages,
@@ -235,7 +242,9 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
         <div className="flex pt-20 min-h-screen">
           <SideNavBar currentStep={step} onStepClick={(s) => setStep(s)} />
           <main className="flex-1 flex flex-col items-center px-4 py-12 md:px-12 bg-surface">
-            <p className="text-secondary font-medium mb-2">Step 2 of 4</p>
+            <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-secondary-container text-on-secondary-container text-xs font-bold mb-4 tracking-widest">
+              <span>STEP 2 / 4</span>
+            </div>
             <h1 className="font-jua text-4xl md:text-5xl text-primary mb-4 word-break-keep">주문하실 상품을 확인해 주세요</h1>
             <div className="w-24 h-1 watercolor-gradient rounded-full mb-12" />
 
@@ -261,11 +270,11 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                         </li>
                         <li className="flex items-center gap-3 text-on-surface-variant">
                           <span className="material-symbols-outlined text-tertiary">auto_stories</span>
-                          <span className="text-sm font-medium">{book.pages.length}페이지</span>
+                          <span className="text-sm font-medium">콘텐츠 {book.pages.length}페이지</span>
                         </li>
                         <li className="flex items-center gap-3 text-on-surface-variant">
                           <span className="material-symbols-outlined text-tertiary">aspect_ratio</span>
-                          <span className="text-sm font-medium">210mm x 210mm</span>
+                          <span className="text-sm font-medium">243mm x 248mm</span>
                         </li>
                       </ul>
                     </div>
@@ -407,6 +416,13 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
 
         const data = await res.json();
         setOrderUid(data.orderUid);
+        setOrderPricing({
+          totalProductAmount: data.totalProductAmount,
+          totalShippingFee: data.totalShippingFee,
+          totalAmount: data.totalAmount,
+          orderStatusDisplay: data.orderStatusDisplay,
+          pageCount: data.pageCount,
+        });
         setStep('complete');
       } catch (err) {
         setOrderApiError(err instanceof Error ? err.message : '다시 시도해 주세요.');
@@ -426,7 +442,9 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
         <div className="flex pt-20 min-h-screen">
           <SideNavBar currentStep={step} onStepClick={(s) => setStep(s)} />
           <main className="flex-1 flex flex-col items-center px-4 py-12 md:px-12 bg-surface">
-            <p className="text-secondary font-medium mb-2">Step 3 of 4</p>
+            <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-secondary-container text-on-secondary-container text-xs font-bold mb-4 tracking-widest">
+              <span>STEP 3 / 4</span>
+            </div>
             <h1 className="font-jua text-4xl md:text-5xl text-primary mb-4 word-break-keep">어디로 보내드릴까요?</h1>
             <div className="w-24 h-1 watercolor-gradient rounded-full mb-12" />
 
@@ -559,6 +577,30 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                 <span className="text-on-surface-variant text-sm">상품명</span>
                 <span className="font-bold text-on-surface">{book.title}</span>
               </div>
+              {orderPricing?.totalProductAmount != null && (
+                <div className="flex justify-between border-b border-outline-variant/10 pb-3">
+                  <span className="text-on-surface-variant text-sm">상품 금액</span>
+                  <span className="font-medium text-on-surface">{orderPricing.totalProductAmount.toLocaleString('ko-KR')}원</span>
+                </div>
+              )}
+              {orderPricing?.totalShippingFee != null && (
+                <div className="flex justify-between border-b border-outline-variant/10 pb-3">
+                  <span className="text-on-surface-variant text-sm">배송비</span>
+                  <span className="font-medium text-on-surface">{orderPricing.totalShippingFee.toLocaleString('ko-KR')}원</span>
+                </div>
+              )}
+              {orderPricing?.totalAmount != null && (
+                <div className="flex justify-between border-b border-outline-variant/10 pb-3">
+                  <span className="text-on-surface-variant text-sm">결제 금액</span>
+                  <span className="font-bold text-primary">{orderPricing.totalAmount.toLocaleString('ko-KR')}원</span>
+                </div>
+              )}
+              {orderPricing?.orderStatusDisplay != null && (
+                <div className="flex justify-between pb-3">
+                  <span className="text-on-surface-variant text-sm">주문 상태</span>
+                  <span className="font-medium text-on-surface">{orderPricing.orderStatusDisplay}</span>
+                </div>
+              )}
               <div className="space-y-1">
                 <span className="text-on-surface-variant text-sm">배송지</span>
                 <p className="text-on-surface text-sm leading-relaxed">{address1} {address2}<br />(받는 사람: {recipientName})</p>
