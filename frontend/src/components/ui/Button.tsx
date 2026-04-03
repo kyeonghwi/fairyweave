@@ -12,17 +12,17 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
-  primary: 'bg-[#E8734A] text-white hover:bg-[#D4623C]',
-  secondary: 'bg-[#FDE8E8] text-[#2D2D2D] hover:bg-[#FCDADA]',
-  outline: 'bg-transparent text-[#E8734A] border border-[#E8734A] hover:bg-[#FFF0EB]',
-  ghost: 'bg-transparent text-[#5C5C5C] hover:bg-[#FDE8E8]',
-  destructive: 'bg-transparent text-[#D14343] border border-[#D14343] hover:bg-[#FDE8E8]',
+  primary: 'watercolor-gradient text-on-primary hover:opacity-90',
+  secondary: 'bg-secondary-container text-on-secondary-container hover:opacity-90',
+  outline: 'bg-transparent text-primary border border-primary/20 hover:bg-surface-container',
+  ghost: 'bg-transparent text-secondary hover:bg-surface-container-low',
+  destructive: 'bg-transparent text-error border border-error hover:bg-error-container/20',
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
   sm: 'px-4 py-2 text-sm font-semibold rounded-xl',
   md: 'px-6 py-3 text-base font-semibold rounded-xl',
-  lg: 'px-8 py-4 text-lg font-[family-name:var(--font-jua)] rounded-2xl',
+  lg: 'px-8 py-4 text-lg font-jua rounded-xl',
 };
 
 export default function Button({
@@ -40,7 +40,7 @@ export default function Button({
       className={`
         inline-flex items-center justify-center
         active:scale-[0.97] transition-all duration-150
-        focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E8734A]
+        focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary
         disabled:opacity-70 disabled:cursor-not-allowed
         cursor-pointer
         ${variantStyles[variant]}

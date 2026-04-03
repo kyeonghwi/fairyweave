@@ -21,13 +21,13 @@ export default function FormField({ label, error, required, children }: FormFiel
 
   return (
     <div className={error ? 'animate-shake' : ''}>
-      <label className="block text-sm font-semibold text-[#2D2D2D] mb-1.5">
+      <label className="block text-sm font-semibold text-on-surface mb-1.5">
         {label}
-        {required && <span className="text-[#D14343] ml-0.5">*</span>}
+        {required && <span className="text-error ml-0.5">*</span>}
       </label>
       {enhancedChildren}
       {error && (
-        <p id={errorId} className="text-xs text-[#D14343] mt-1" role="alert">
+        <p id={errorId} className="text-xs text-error mt-1" role="alert">
           {error}
         </p>
       )}

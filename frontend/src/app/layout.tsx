@@ -30,7 +30,19 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko" className={`${jua.variable} ${pretendard.variable}`}>
-      <body className="font-pretendard text-[#2D2D2D] bg-[#FFF8F0]">
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="font-pretendard text-on-surface bg-surface selection:bg-primary-container selection:text-on-primary-container">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-primary focus:text-on-primary focus:px-4 focus:py-2 focus:rounded-lg"
+        >
+          본문으로 건너뛰기
+        </a>
         {children}
       </body>
     </html>

@@ -15,11 +15,11 @@ export default function ThemeChip({ emoji, label, selected, onClick }: ThemeChip
       className={`
         rounded-full px-4 py-2.5 text-sm font-semibold border cursor-pointer
         transition-all duration-150
-        focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E8734A]
+        focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary
         ${
           selected
-            ? 'border-[#E8734A] bg-[#FFF0EB] text-[#E8734A] shadow-sm'
-            : 'bg-[#FFF8F0] border-[#E0D6CC] text-[#2D2D2D] hover:border-[#E8734A]/40 hover:bg-[#FFF0EB]'
+            ? 'border-primary bg-primary-container/20 text-primary shadow-sm'
+            : 'bg-surface-container-lowest border-outline-variant text-on-surface hover:border-primary/40 hover:bg-primary-container/10'
         }
       `}
     >

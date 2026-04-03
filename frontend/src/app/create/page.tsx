@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import PageLayout from '../../components/PageLayout';
+import TopNavBar from '../../components/TopNavBar';
+import Footer from '../../components/Footer';
 import Button from '../../components/ui/Button';
 import FormField from '../../components/ui/FormField';
 import ThemeChip from '../../components/ThemeChip';
@@ -41,6 +42,17 @@ export default function CreatePage() {
   const [progress, setProgress] = useState(0);
   const [stepText, setStepText] = useState('');
   const [apiError, setApiError] = useState('');
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const stopPolling = useCallback(() => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+  }, []);
+
+  // Cleanup polling on unmount
+  useEffect(() => stopPolling, [stopPolling]);
 
   const isCustomTheme = selectedTheme === '직접 입력';
   const effectiveTheme = isCustomTheme ? customTheme : selectedTheme;
@@ -53,13 +65,45 @@ export default function CreatePage() {
     return errs;
   }
 
+  function startPolling(id: string) {
+    pollingRef.current = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/generate-book/${id}/status`);
+        if (!res.ok) {
+          // Generation failed or server restarted
+          stopPolling();
+          setLoading(false);
+          setProgress(0);
+          setApiError('생성 중 문제가 발생했어요. 다시 시도해 주세요.');
+          return;
+        }
+        const status = await res.json();
+
+        if (status.step === 'story') {
+          setProgress(10);
+          setStepText('이야기를 쓰고 있어요...');
+        } else if (status.step === 'images') {
+          const pct = 15 + Math.round((status.imagesCompleted / status.totalImages) * 80);
+          setProgress(pct);
+          setStepText(`삽화를 그리고 있어요 (${status.imagesCompleted}/${status.totalImages})`);
+        } else if (status.step === 'done') {
+          stopPolling();
+          setProgress(100);
+          setStepText('완성!');
+          setTimeout(() => router.push(`/book/${id}`), 600);
+        }
+      } catch {
+        // Network error — keep polling, might recover
+      }
+    }, 2000);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const errs = validate();
     setErrors(errs);
 
     if (Object.keys(errs).length > 0) {
-      // Scroll to first error
       const firstErrorField = formRef.current?.querySelector('[aria-invalid="true"]');
       firstErrorField?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
@@ -67,32 +111,11 @@ export default function CreatePage() {
 
     setLoading(true);
     setProgress(5);
-    setStepText('스토리 쓰는 중...');
+    setStepText('준비 중...');
     setApiError('');
 
     try {
-      // Simulate progress while waiting for API
-      const progressInterval = setInterval(() => {
-        setProgress((prev) => {
-          if (prev < 25) {
-            setStepText('스토리 쓰는 중...');
-            return prev + 2;
-          }
-          if (prev < 85) {
-            const imageCount = Math.floor(((prev - 25) / 60) * 16);
-            setStepText(`삽화 그리는 중 (${Math.min(imageCount, 16)}/16)...`);
-            return prev + 1;
-          }
-          if (prev < 95) {
-            setStepText('거의 다 되었어요!');
-            return prev + 0.5;
-          }
-          return prev;
-        });
-      }, 800);
-
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
-      const res = await fetch(`${backendUrl}/api/generate-book`, {
+      const res = await fetch('/api/generate-book', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -103,156 +126,151 @@ export default function CreatePage() {
         }),
       });
 
-      clearInterval(progressInterval);
-
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || '동화책 생성에 실패했어요');
       }
 
       const data = await res.json();
-      setProgress(100);
-      setStepText('완성!');
-
-      // Cache book data in memory for the book page (sessionStorage too small for base64 images)
-      (window as any).__bookCache = {
-        ...data,
-        request: { childName: childName.trim(), age: Number(age), theme: effectiveTheme.trim(), moral: moral.trim() },
-      };
-
-      // Navigate to book preview
-      setTimeout(() => {
-        router.push(`/book/${data.bookId}`);
-      }, 500);
+      setStepText('이야기를 쓰고 있어요...');
+      setProgress(10);
+      startPolling(data.bookId);
     } catch (err) {
       setLoading(false);
       setProgress(0);
-      setApiError(err instanceof Error ? err.message : '다시 시도해 주세요. 문제가 계속되면 잠시 후 시도해 주세요.');
+      setApiError(err instanceof Error ? err.message : '다시 시도해 주세요.');
     }
   }
 
   if (loading) {
     return (
-      <PageLayout className="flex flex-col items-center justify-center min-h-[60vh]">
-        <div className="bg-[#FDE8E8] rounded-2xl p-6 text-center w-full max-w-lg">
-          {/* Animated book skeleton */}
-          <div className="mx-auto w-24 h-32 bg-[#E8734A]/20 rounded-lg animate-pulse" />
-          <ProgressBar progress={progress} stepText={stepText} />
-        </div>
-      </PageLayout>
+      <>
+        <TopNavBar />
+        <main className="min-h-screen bg-surface pt-20 flex flex-col items-center justify-center px-4">
+          <div className="bg-surface-container-low rounded-lg p-6 text-center w-full max-w-lg tonal-shadow">
+            <div className="mx-auto w-24 h-32 bg-primary-container/20 rounded-lg animate-pulse" />
+            <ProgressBar progress={progress} stepText={stepText} />
+          </div>
+        </main>
+        <Footer />
+      </>
     );
   }
 
   return (
-    <PageLayout>
-      <div className="max-w-lg mx-auto">
-        {/* Back */}
-        <Link href="/">
-          <Button variant="ghost" size="sm" className="mb-4">
-            ← 뒤로가기
-          </Button>
-        </Link>
-
-        {/* Form card */}
-        <div className="bg-[#FDE8E8] rounded-2xl p-6 sm:p-8">
-          <h1 className="font-[family-name:var(--font-jua)] text-2xl text-[#2D2D2D] mb-6">
-            동화책 만들기
-          </h1>
-
-          {apiError && (
-            <div className="mb-6">
-              <ErrorBanner message={apiError} onRetry={() => setApiError('')} />
-            </div>
-          )}
-
-          <form ref={formRef} onSubmit={handleSubmit} className="space-y-5" noValidate>
-            {/* 아이 이름 */}
-            <FormField label="아이 이름" required error={errors.childName}>
-              <input
-                type="text"
-                value={childName}
-                onChange={(e) => setChildName(e.target.value)}
-                placeholder="주인공 이름을 입력해 주세요"
-                maxLength={20}
-                aria-invalid={!!errors.childName}
-                className={`w-full rounded-xl px-4 py-3 bg-[#FFF8F0] border text-base
-                  placeholder:text-[#9E9E9E] focus:border-[#E8734A] focus:ring-2 focus:ring-[#E8734A]/20
-                  transition-colors outline-none
-                  ${errors.childName ? 'border-[#D14343]' : 'border-[#E0D6CC]'}`}
-              />
-            </FormField>
-
-            {/* 나이 */}
-            <FormField label="나이" required error={errors.age}>
-              <select
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
-                aria-invalid={!!errors.age}
-                className={`w-full rounded-xl px-4 py-3 bg-[#FFF8F0] border text-base
-                  focus:border-[#E8734A] focus:ring-2 focus:ring-[#E8734A]/20
-                  transition-colors outline-none appearance-none cursor-pointer
-                  ${!age ? 'text-[#9E9E9E]' : ''}
-                  ${errors.age ? 'border-[#D14343]' : 'border-[#E0D6CC]'}`}
-              >
-                <option value="" disabled>나이를 선택해 주세요</option>
-                {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-                  <option key={n} value={n}>{n}세</option>
-                ))}
-              </select>
-            </FormField>
-
-            {/* 테마 */}
-            <FormField label="테마" required error={errors.theme}>
-              <div className="flex flex-wrap gap-2">
-                {THEMES.map((t) => (
-                  <ThemeChip
-                    key={t.label}
-                    emoji={t.emoji}
-                    label={t.label}
-                    selected={selectedTheme === t.label}
-                    onClick={() => setSelectedTheme(t.label)}
-                  />
-                ))}
-              </div>
-              {isCustomTheme && (
-                <div className="animate-slideDown mt-3">
-                  <input
-                    type="text"
-                    value={customTheme}
-                    onChange={(e) => setCustomTheme(e.target.value)}
-                    placeholder="원하는 테마를 입력해 주세요"
-                    maxLength={20}
-                    className="w-full rounded-xl px-4 py-3 bg-[#FFF8F0] border border-[#E0D6CC] text-base
-                      placeholder:text-[#9E9E9E] focus:border-[#E8734A] focus:ring-2 focus:ring-[#E8734A]/20
-                      transition-colors outline-none"
-                  />
-                </div>
-              )}
-            </FormField>
-
-            {/* 스토리 방향 */}
-            <FormField label="스토리 방향 / 교훈">
-              <textarea
-                value={moral}
-                onChange={(e) => setMoral(e.target.value)}
-                rows={3}
-                placeholder="예: 형제간의 우애, 편식 극복"
-                className="w-full rounded-xl px-4 py-3 bg-[#FFF8F0] border border-[#E0D6CC] text-base
-                  placeholder:text-[#9E9E9E] focus:border-[#E8734A] focus:ring-2 focus:ring-[#E8734A]/20
-                  transition-colors outline-none resize-none"
-              />
-              <p className="text-xs text-[#5C5C5C] mt-1">
-                선택사항이에요. 비워두면 AI가 자유롭게 구성해요.
-              </p>
-            </FormField>
-
-            {/* Submit */}
-            <Button type="submit" size="lg" className="w-full mt-8">
-              동화책 만들기
+    <>
+      <TopNavBar />
+      <main className="min-h-screen bg-surface pt-20">
+        <div className="max-w-lg mx-auto px-4 py-12">
+          {/* Back */}
+          <Link href="/">
+            <Button variant="ghost" size="sm" className="mb-4">
+              ← 뒤로가기
             </Button>
-          </form>
+          </Link>
+
+          {/* Form card */}
+          <div className="bg-surface-container-lowest rounded-lg p-6 sm:p-8 tonal-shadow border border-outline-variant/10">
+            <h1 className="font-jua text-2xl text-on-surface mb-6">
+              동화책 만들기
+            </h1>
+
+            {apiError && (
+              <div className="mb-6">
+                <ErrorBanner message={apiError} onRetry={() => setApiError('')} />
+              </div>
+            )}
+
+            <form ref={formRef} onSubmit={handleSubmit} className="space-y-5" noValidate>
+              {/* 아이 이름 */}
+              <FormField label="아이 이름" required error={errors.childName}>
+                <input
+                  type="text"
+                  value={childName}
+                  onChange={(e) => setChildName(e.target.value)}
+                  placeholder="주인공 이름을 입력해 주세요"
+                  maxLength={20}
+                  aria-invalid={!!errors.childName}
+                  className={`w-full rounded-xl px-4 py-3 bg-surface-container-highest border text-base
+                    placeholder:text-outline focus:border-primary focus:ring-2 focus:ring-primary/20
+                    transition-colors outline-none
+                    ${errors.childName ? 'border-error' : 'border-outline-variant'}`}
+                />
+              </FormField>
+
+              {/* 나이 */}
+              <FormField label="나이" required error={errors.age}>
+                <select
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                  aria-invalid={!!errors.age}
+                  className={`w-full rounded-xl px-4 py-3 bg-surface-container-highest border text-base
+                    focus:border-primary focus:ring-2 focus:ring-primary/20
+                    transition-colors outline-none appearance-none cursor-pointer
+                    ${!age ? 'text-outline' : ''}
+                    ${errors.age ? 'border-error' : 'border-outline-variant'}`}
+                >
+                  <option value="" disabled>나이를 선택해 주세요</option>
+                  {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                    <option key={n} value={n}>{n}세</option>
+                  ))}
+                </select>
+              </FormField>
+
+              {/* 테마 */}
+              <FormField label="테마" required error={errors.theme}>
+                <div className="flex flex-wrap gap-2">
+                  {THEMES.map((t) => (
+                    <ThemeChip
+                      key={t.label}
+                      emoji={t.emoji}
+                      label={t.label}
+                      selected={selectedTheme === t.label}
+                      onClick={() => setSelectedTheme(t.label)}
+                    />
+                  ))}
+                </div>
+                {isCustomTheme && (
+                  <div className="animate-slideDown mt-3">
+                    <input
+                      type="text"
+                      value={customTheme}
+                      onChange={(e) => setCustomTheme(e.target.value)}
+                      placeholder="원하는 테마를 입력해 주세요"
+                      maxLength={20}
+                      className="w-full rounded-xl px-4 py-3 bg-surface-container-highest border border-outline-variant text-base
+                        placeholder:text-outline focus:border-primary focus:ring-2 focus:ring-primary/20
+                        transition-colors outline-none"
+                    />
+                  </div>
+                )}
+              </FormField>
+
+              {/* 스토리 방향 */}
+              <FormField label="스토리 방향 / 교훈">
+                <textarea
+                  value={moral}
+                  onChange={(e) => setMoral(e.target.value)}
+                  rows={3}
+                  placeholder="예: 형제간의 우애, 편식 극복"
+                  className="w-full rounded-xl px-4 py-3 bg-surface-container-highest border border-outline-variant text-base
+                    placeholder:text-outline focus:border-primary focus:ring-2 focus:ring-primary/20
+                    transition-colors outline-none resize-none"
+                />
+                <p className="text-xs text-on-surface-variant mt-1">
+                  비워두셔도 괜찮아요. AI가 따뜻한 이야기를 만들어 드릴게요.
+                </p>
+              </FormField>
+
+              {/* Submit */}
+              <Button type="submit" size="lg" className="w-full mt-8">
+                동화책 만들기
+              </Button>
+            </form>
+          </div>
         </div>
-      </div>
-    </PageLayout>
+      </main>
+      <Footer />
+    </>
   );
 }

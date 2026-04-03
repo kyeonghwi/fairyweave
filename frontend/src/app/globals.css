@@ -38,6 +38,16 @@
   50% { transform: translateY(-8px); }
 }
 
+@keyframes slidePageRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slidePageLeft {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
 @keyframes confettiUp {
   0% { opacity: 1; transform: translateY(0) scale(1); }
   100% { opacity: 0; transform: translateY(-80px) scale(0.5); }
@@ -50,6 +60,8 @@
 .animate-bounceIn { animation: bounceIn 400ms ease-out forwards; }
 .animate-shake { animation: shake 300ms ease-out; }
 .animate-float { animation: float 3s ease-in-out infinite; }
+.animate-slidePageRight { animation: slidePageRight 250ms ease-out forwards; }
+.animate-slidePageLeft { animation: slidePageLeft 250ms ease-out forwards; }
 .animate-confetti { animation: confettiUp 1.2s ease-out forwards; }
 
 /* Reduced motion */
@@ -60,7 +72,21 @@
   .animate-bounceIn,
   .animate-shake,
   .animate-float,
+  .animate-slidePageRight,
+  .animate-slidePageLeft,
   .animate-confetti {
     animation: none !important;
   }
 }
+
+/* Material Symbols */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Design system utilities */
+.font-jua { font-family: var(--font-jua), sans-serif; }
+.watercolor-gradient { background: linear-gradient(45deg, #974362, #fe97b9); }
+.glass-effect { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.word-break-keep { word-break: keep-all; }
+.tonal-shadow { box-shadow: 0 12px 32px -8px rgba(54, 50, 41, 0.08); }

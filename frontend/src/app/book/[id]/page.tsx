@@ -2,16 +2,16 @@
 
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
-import PageLayout from '../../../components/PageLayout';
+import TopNavBar from '../../../components/TopNavBar';
+import SideNavBar from '../../../components/SideNavBar';
+import Footer from '../../../components/Footer';
 import PageSlider from '../../../components/PageSlider';
 import Button from '../../../components/ui/Button';
 import FormField from '../../../components/ui/FormField';
-import OrderSummary from '../../../components/OrderSummary';
 import ErrorBanner from '../../../components/ErrorBanner';
 import { getDummyBook } from '../../../data/dummyData';
-import { CheckCircle } from 'lucide-react';
 
-type Step = 'preview' | 'order' | 'complete';
+type Step = 'preview' | 'details' | 'shipping' | 'complete';
 
 interface BookData {
   id: string;
@@ -105,70 +105,235 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
   if (loadError) {
     const isExpired = loadError === 'AI_BOOK_EXPIRED';
     return (
-      <PageLayout className="flex flex-col items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <span className="text-5xl block mb-4">{isExpired ? '⏳' : '😢'}</span>
-          <h2 className="font-[family-name:var(--font-jua)] text-xl text-[#2D2D2D] mb-2">
-            {isExpired ? '생성된 책 데이터가 만료되었어요' : '문제가 발생했어요'}
-          </h2>
-          <p className="text-[#5C5C5C] mb-6">
-            {isExpired
-              ? 'AI로 생성한 책은 서버 메모리에 임시 저장돼요. 다시 만들어 보세요!'
-              : loadError}
-          </p>
-          <div className="flex gap-3 justify-center">
-            <Link href="/create">
-              <Button variant="primary">다시 만들기</Button>
-            </Link>
-            <Link href="/">
-              <Button variant="outline">메인으로</Button>
-            </Link>
-          </div>
+      <>
+        <TopNavBar />
+        <div className="flex pt-20 min-h-screen">
+          <main className="flex-1 flex flex-col items-center justify-center px-4 py-12 md:px-12 bg-surface">
+            <div className="text-center">
+              <span className="text-5xl block mb-4">{isExpired ? '⏳' : '😢'}</span>
+              <h2 className="font-jua text-xl text-on-surface mb-2">
+                {isExpired ? '생성된 책 데이터가 만료되었어요' : '문제가 발생했어요'}
+              </h2>
+              <p className="text-secondary mb-6">
+                {isExpired
+                  ? 'AI로 생성한 책은 서버 메모리에 임시 저장돼요. 다시 만들어 보세요!'
+                  : loadError}
+              </p>
+              <div className="flex gap-3 justify-center">
+                <Link href="/create">
+                  <Button variant="primary">다시 만들기</Button>
+                </Link>
+                <Link href="/">
+                  <Button variant="outline">메인으로</Button>
+                </Link>
+              </div>
+            </div>
+          </main>
         </div>
-      </PageLayout>
+        <Footer />
+      </>
     );
   }
 
   if (!book) {
     return (
-      <PageLayout className="flex flex-col items-center justify-center min-h-[60vh]">
-        <div className="w-16 h-20 bg-[#FDE8E8] rounded-lg animate-pulse" />
-        <p className="text-[#5C5C5C] mt-4">불러오는 중...</p>
-      </PageLayout>
+      <>
+        <TopNavBar />
+        <div className="flex pt-20 min-h-screen">
+          <main className="flex-1 flex flex-col items-center justify-center px-4 py-12 md:px-12 bg-surface">
+            <div className="w-16 h-20 bg-primary-container/20 rounded-lg animate-pulse" />
+            <p className="text-secondary mt-4">불러오는 중...</p>
+          </main>
+        </div>
+        <Footer />
+      </>
     );
   }
 
   // --- Step: Preview ---
   if (step === 'preview') {
     return (
-      <PageLayout>
-        <div className="max-w-lg mx-auto">
-          <Link href="/">
-            <Button variant="ghost" size="sm" className="mb-4">← 뒤로가기</Button>
-          </Link>
+      <>
+        <TopNavBar />
+        <div className="flex pt-20 min-h-screen">
+          <SideNavBar currentStep={step} onStepClick={(s) => setStep(s)} />
+          <main className="flex-1 flex flex-col items-center px-4 py-12 md:px-12 bg-surface">
+            {/* Step badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-secondary-container text-on-secondary-container text-xs font-bold mb-4 tracking-widest">
+              <span>STEP 1 / 4</span>
+            </div>
 
-          <h1 className="font-[family-name:var(--font-jua)] text-2xl text-[#2D2D2D] mb-4">
-            {book.title}
-          </h1>
+            <h1 className="text-4xl md:text-5xl font-jua text-on-surface mb-4 leading-tight word-break-keep">
+              {book.title}
+            </h1>
+            <p className="text-secondary text-lg opacity-80 mb-12">
+              꿈꾸는 아이의 이름이 담긴 세상에 하나뿐인 이야기를 확인해보세요.
+            </p>
 
-          <PageSlider
-            pages={book.pages}
-            imageUrls={book.imageUrls}
-            currentPage={currentPage}
-            onPageChange={setCurrentPage}
-            bookTitle={book.title}
-          />
+            {/* Book preview area */}
+            <div className="w-full max-w-5xl">
+              <div className="bg-surface-container-low rounded-lg p-4 md:p-8 tonal-shadow">
+                <PageSlider
+                  pages={book.pages}
+                  imageUrls={book.imageUrls}
+                  currentPage={currentPage}
+                  onPageChange={setCurrentPage}
+                  bookTitle={book.title}
+                />
+              </div>
+            </div>
 
-          <Button size="lg" className="w-full mt-6" onClick={() => setStep('order')}>
-            이 동화책 주문하기
-          </Button>
+            {/* Story text */}
+            {book.pages[currentPage] && (
+              <div className="mt-12 max-w-2xl text-center">
+                <span className="material-symbols-outlined text-primary-container text-5xl opacity-40 mb-2">format_quote</span>
+                <p className="font-jua text-2xl md:text-3xl text-on-surface leading-relaxed word-break-keep">
+                  &ldquo;{book.pages[currentPage].text}&rdquo;
+                </p>
+              </div>
+            )}
+
+            {/* CTA */}
+            <button
+              onClick={() => setStep('details')}
+              className="mt-16 watercolor-gradient text-on-primary px-12 py-5 rounded-xl font-jua text-xl tonal-shadow hover:opacity-90 active:scale-95 transition-all flex items-center gap-3"
+            >
+              다음 단계로: 주문 확인하기
+              <span className="material-symbols-outlined">arrow_forward</span>
+            </button>
+
+            {/* Info cards */}
+            <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-5xl">
+              <div className="bg-surface-container-lowest p-6 rounded-lg text-center">
+                <span className="material-symbols-outlined text-tertiary mb-3 text-3xl">child_care</span>
+                <h3 className="font-jua text-on-surface mb-2">주인공: {book.childName}</h3>
+                <p className="text-on-surface-variant text-sm">아이의 이름이 이야기 곳곳에 자연스럽게 녹아듭니다.</p>
+              </div>
+              <div className="bg-surface-container-lowest p-6 rounded-lg text-center">
+                <span className="material-symbols-outlined text-tertiary mb-3 text-3xl">auto_fix_high</span>
+                <h3 className="font-jua text-on-surface mb-2">커스텀 일러스트</h3>
+                <p className="text-on-surface-variant text-sm">선택하신 캐릭터 스타일로 모든 장면이 생성되었습니다.</p>
+              </div>
+              <div className="bg-surface-container-lowest p-6 rounded-lg text-center">
+                <span className="material-symbols-outlined text-tertiary mb-3 text-3xl">menu_book</span>
+                <h3 className="font-jua text-on-surface mb-2">프리미엄 하드커버</h3>
+                <p className="text-on-surface-variant text-sm">도톰하고 부드러운 고급 종이에 선명하게 인쇄됩니다.</p>
+              </div>
+            </div>
+          </main>
         </div>
-      </PageLayout>
+        <Footer />
+      </>
     );
   }
 
-  // --- Step: Order ---
-  if (step === 'order') {
+  // --- Step: Details (order summary) ---
+  if (step === 'details') {
+    return (
+      <>
+        <TopNavBar />
+        <div className="flex pt-20 min-h-screen">
+          <SideNavBar currentStep={step} onStepClick={(s) => setStep(s)} />
+          <main className="flex-1 flex flex-col items-center px-4 py-12 md:px-12 bg-surface">
+            <p className="text-secondary font-medium mb-2">Step 2 of 4</p>
+            <h1 className="font-jua text-4xl md:text-5xl text-primary mb-4 word-break-keep">주문하실 상품을 확인해 주세요</h1>
+            <div className="w-24 h-1 watercolor-gradient rounded-full mb-12" />
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start w-full max-w-5xl">
+              {/* Product card */}
+              <div className="lg:col-span-2 space-y-8">
+                <div className="bg-surface-container-lowest p-6 md:p-8 rounded-lg tonal-shadow flex flex-col md:flex-row gap-8">
+                  <div className="w-full md:w-48 h-64 flex-shrink-0 rounded-md overflow-hidden shadow-inner">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={book.imageUrls[0]} alt="표지" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex flex-col justify-between">
+                    <div>
+                      <h3 className="font-jua text-2xl text-on-surface mb-2">{book.title}</h3>
+                      <p className="text-secondary mb-6 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-sm">edit</span>
+                        저자: {book.childName}
+                      </p>
+                      <ul className="space-y-3">
+                        <li className="flex items-center gap-3 text-on-surface-variant">
+                          <span className="material-symbols-outlined text-tertiary">menu_book</span>
+                          <span className="text-sm font-medium">프리미엄 하드커버</span>
+                        </li>
+                        <li className="flex items-center gap-3 text-on-surface-variant">
+                          <span className="material-symbols-outlined text-tertiary">auto_stories</span>
+                          <span className="text-sm font-medium">{book.pages.length}페이지</span>
+                        </li>
+                        <li className="flex items-center gap-3 text-on-surface-variant">
+                          <span className="material-symbols-outlined text-tertiary">aspect_ratio</span>
+                          <span className="text-sm font-medium">210mm x 210mm</span>
+                        </li>
+                      </ul>
+                    </div>
+                    <div className="mt-8 pt-6 border-t border-outline-variant/15 flex items-center gap-2 text-tertiary font-medium">
+                      <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>auto_fix_high</span>
+                      <span className="text-sm">세상에 단 하나뿐인 특별한 이야기</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Decorative Quote */}
+                <div className="bg-surface-container-low p-8 rounded-lg border border-outline-variant/10 text-center">
+                  <p className="font-jua text-secondary text-lg italic word-break-keep">&ldquo;우리 아이의 꿈이 자라나는 마법 같은 순간을 간직하세요.&rdquo;</p>
+                </div>
+              </div>
+
+              {/* Summary card */}
+              <div className="lg:col-span-1 sticky top-32">
+                <div className="bg-surface-container-lowest p-8 rounded-lg tonal-shadow">
+                  <h4 className="font-jua text-xl text-on-surface mb-6">결제 금액 요약</h4>
+                  <div className="space-y-4 mb-8">
+                    <div className="flex justify-between text-on-surface-variant">
+                      <span className="text-sm">상품 금액</span>
+                      <span className="text-sm font-medium">38,000원</span>
+                    </div>
+                    <div className="flex justify-between text-on-surface-variant">
+                      <span className="text-sm">배송비</span>
+                      <span className="text-sm font-medium">3,000원</span>
+                    </div>
+                    <div className="h-px bg-outline-variant/15 my-2" />
+                    <div className="flex justify-between items-center pt-2">
+                      <span className="font-bold text-on-surface">총 결제 금액</span>
+                      <span className="text-2xl font-bold text-primary">41,000원</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setStep('shipping')}
+                    className="w-full watercolor-gradient text-on-primary py-4 px-6 rounded-xl font-bold text-lg shadow-md hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                  >
+                    <span>배송 정보 입력하기</span>
+                    <span className="material-symbols-outlined">arrow_forward</span>
+                  </button>
+                  <p className="text-center text-xs text-on-surface-variant mt-6 px-4">
+                    결제 완료 시 제작이 시작되며,<br />영업일 기준 5-7일 내외로 배송됩니다.
+                  </p>
+                </div>
+                {/* Trust badges */}
+                <div className="mt-6 flex justify-center gap-4 text-outline opacity-60">
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="material-symbols-outlined text-xl">verified_user</span>
+                    <span className="text-[10px]">Safe Payment</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="material-symbols-outlined text-xl">eco</span>
+                    <span className="text-[10px]">FSC Paper</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  // --- Step: Shipping ---
+  if (step === 'shipping') {
     function validateOrder(): OrderErrors {
       const errs: OrderErrors = {};
       if (!recipientName.trim()) errs.recipientName = '받으실 분 이름을 입력해 주세요';
@@ -251,118 +416,174 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
     }
 
     const inputClass = (hasError: boolean) =>
-      `w-full rounded-xl px-4 py-3 bg-[#FFF8F0] border text-base
-       placeholder:text-[#9E9E9E] focus:border-[#E8734A] focus:ring-2 focus:ring-[#E8734A]/20
-       transition-colors outline-none ${hasError ? 'border-[#D14343]' : 'border-[#E0D6CC]'}`;
+      `w-full rounded-xl px-4 py-3 bg-surface-container-highest border text-base
+       placeholder:text-outline focus:border-primary focus:ring-2 focus:ring-primary/20
+       transition-colors outline-none ${hasError ? 'border-error' : 'border-outline-variant'}`;
 
     return (
-      <PageLayout>
-        <div className="max-w-lg mx-auto animate-slideInRight">
-          <Button variant="ghost" size="sm" className="mb-4" onClick={() => setStep('preview')}>← 미리보기로 돌아가기</Button>
+      <>
+        <TopNavBar />
+        <div className="flex pt-20 min-h-screen">
+          <SideNavBar currentStep={step} onStepClick={(s) => setStep(s)} />
+          <main className="flex-1 flex flex-col items-center px-4 py-12 md:px-12 bg-surface">
+            <p className="text-secondary font-medium mb-2">Step 3 of 4</p>
+            <h1 className="font-jua text-4xl md:text-5xl text-primary mb-4 word-break-keep">어디로 보내드릴까요?</h1>
+            <div className="w-24 h-1 watercolor-gradient rounded-full mb-12" />
 
-          <div className="bg-[#FDE8E8] rounded-2xl p-6 sm:p-8">
-            <h2 className="font-[family-name:var(--font-jua)] text-2xl text-[#2D2D2D] mb-6">
-              배송 정보
-            </h2>
+            <div className="w-full max-w-2xl">
+              <div className="bg-surface-container-lowest rounded-lg p-8 tonal-shadow border border-outline-variant/10">
+                {orderApiError && (
+                  <div className="mb-6">
+                    <ErrorBanner message={orderApiError} onRetry={() => setOrderApiError('')} />
+                  </div>
+                )}
 
-            {orderApiError && (
-              <div className="mb-6">
-                <ErrorBanner message={orderApiError} onRetry={() => setOrderApiError('')} />
+                <form onSubmit={handleOrder} className="space-y-4" noValidate>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField label="수령인 이름" required error={orderErrors.recipientName}>
+                      <input
+                        type="text" value={recipientName} onChange={(e) => setRecipientName(e.target.value)}
+                        placeholder="받으실 분 이름" aria-invalid={!!orderErrors.recipientName}
+                        className={inputClass(!!orderErrors.recipientName)}
+                      />
+                    </FormField>
+
+                    <FormField label="연락처" required error={orderErrors.recipientPhone}>
+                      <input
+                        type="tel" value={recipientPhone} onChange={(e) => setRecipientPhone(e.target.value)}
+                        placeholder="010-1234-5678" aria-invalid={!!orderErrors.recipientPhone}
+                        className={inputClass(!!orderErrors.recipientPhone)}
+                      />
+                    </FormField>
+                  </div>
+
+                  <FormField label="주소" required error={orderErrors.postalCode}>
+                    <div className="space-y-4">
+                      <div className="flex gap-3">
+                        <input
+                          type="text" value={postalCode} onChange={(e) => setPostalCode(e.target.value)}
+                          placeholder="우편번호" maxLength={5} aria-invalid={!!orderErrors.postalCode}
+                          className={`w-32 rounded-xl px-4 py-3 bg-surface-container-highest border text-base
+                           placeholder:text-outline focus:border-primary focus:ring-2 focus:ring-primary/20
+                           transition-colors outline-none ${orderErrors.postalCode ? 'border-error' : 'border-outline-variant'}`}
+                        />
+                        <button
+                          type="button"
+                          className="bg-secondary-container text-on-secondary-container px-6 py-3 rounded-xl font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+                        >
+                          <span className="material-symbols-outlined text-lg">search</span>
+                          주소 찾기
+                        </button>
+                      </div>
+                      <input
+                        type="text" value={address1} onChange={(e) => setAddress1(e.target.value)}
+                        placeholder="기본 주소" aria-invalid={!!orderErrors.address1}
+                        className={inputClass(!!orderErrors.address1)}
+                      />
+                      <input
+                        type="text" value={address2} onChange={(e) => setAddress2(e.target.value)}
+                        placeholder="상세 주소"
+                        className={inputClass(false)}
+                      />
+                    </div>
+                  </FormField>
+
+                  <FormField label="배송 메모">
+                    <select
+                      value={shippingMemo}
+                      onChange={(e) => setShippingMemo(e.target.value)}
+                      className={`${inputClass(false)} appearance-none cursor-pointer`}
+                    >
+                      <option value="">배송 메모를 선택해주세요</option>
+                      <option value="부재 시 경비실에 맡겨주세요">부재 시 경비실에 맡겨주세요</option>
+                      <option value="배송 전 미리 연락바랍니다">배송 전 미리 연락바랍니다</option>
+                      <option value="직접 입력">직접 입력</option>
+                    </select>
+                  </FormField>
+
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-6 mt-8">
+                    <button
+                      type="button"
+                      onClick={() => setStep('details')}
+                      className="flex items-center gap-2 text-secondary font-medium hover:text-primary transition-colors"
+                    >
+                      <span className="material-symbols-outlined">arrow_back</span>
+                      이전 단계로
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={orderLoading}
+                      className="watercolor-gradient text-on-primary px-12 py-5 rounded-xl font-jua text-xl shadow-lg hover:opacity-90 transition-all flex items-center gap-3 active:scale-95 disabled:opacity-70"
+                    >
+                      {orderLoading ? '주문 처리 중...' : '결제하고 주문 완료하기'}
+                      <span className="material-symbols-outlined">colors_spark</span>
+                    </button>
+                  </div>
+                </form>
               </div>
-            )}
-
-            <form onSubmit={handleOrder} className="space-y-4" noValidate>
-              <FormField label="수령인 이름" required error={orderErrors.recipientName}>
-                <input
-                  type="text" value={recipientName} onChange={(e) => setRecipientName(e.target.value)}
-                  placeholder="받으실 분 이름" aria-invalid={!!orderErrors.recipientName}
-                  className={inputClass(!!orderErrors.recipientName)}
-                />
-              </FormField>
-
-              <FormField label="연락처" required error={orderErrors.recipientPhone}>
-                <input
-                  type="tel" value={recipientPhone} onChange={(e) => setRecipientPhone(e.target.value)}
-                  placeholder="010-1234-5678" aria-invalid={!!orderErrors.recipientPhone}
-                  className={inputClass(!!orderErrors.recipientPhone)}
-                />
-              </FormField>
-
-              <FormField label="우편번호" required error={orderErrors.postalCode}>
-                <input
-                  type="text" value={postalCode} onChange={(e) => setPostalCode(e.target.value)}
-                  placeholder="12345" maxLength={5} aria-invalid={!!orderErrors.postalCode}
-                  className={inputClass(!!orderErrors.postalCode)}
-                />
-              </FormField>
-
-              <FormField label="주소" required error={orderErrors.address1}>
-                <input
-                  type="text" value={address1} onChange={(e) => setAddress1(e.target.value)}
-                  placeholder="서울시 강남구 테헤란로 123" aria-invalid={!!orderErrors.address1}
-                  className={inputClass(!!orderErrors.address1)}
-                />
-              </FormField>
-
-              <FormField label="상세주소">
-                <input
-                  type="text" value={address2} onChange={(e) => setAddress2(e.target.value)}
-                  placeholder="101동 202호" className={inputClass(false)}
-                />
-              </FormField>
-
-              <FormField label="배송 메모">
-                <input
-                  type="text" value={shippingMemo} onChange={(e) => setShippingMemo(e.target.value)}
-                  placeholder="부재 시 경비실에 맡겨 주세요" className={inputClass(false)}
-                />
-              </FormField>
-
-              <Button type="submit" size="lg" loading={orderLoading} className="w-full mt-6">
-                주문하기
-              </Button>
-            </form>
-          </div>
+            </div>
+          </main>
         </div>
-      </PageLayout>
+        <Footer />
+      </>
     );
   }
 
   // --- Step: Complete ---
   return (
-    <PageLayout>
-      <div className="max-w-lg mx-auto text-center py-8 animate-fadeScaleIn">
-        <div className="relative inline-block">
-          <div className="animate-bounceIn">
-            <CheckCircle size={64} className="text-[#2D8A56] mx-auto" />
+    <>
+      <TopNavBar />
+      <div className="flex pt-20 min-h-screen">
+        <SideNavBar currentStep={step} onStepClick={(s) => setStep(s)} />
+        <main className="flex-1 flex flex-col items-center justify-center px-4 py-12 md:px-12 bg-surface">
+          <div className="max-w-lg mx-auto text-center space-y-8">
+            {/* Success icon */}
+            <div className="flex justify-center">
+              <div className="w-24 h-24 bg-surface-container-lowest rounded-full flex items-center justify-center shadow-inner ring-8 ring-surface-container-low animate-bounceIn">
+                <span className="material-symbols-outlined text-6xl text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h2 className="font-jua text-4xl text-on-surface">주문이 완료되었어요!</h2>
+              <p className="text-secondary font-medium">따뜻한 마음을 담아 정성껏 제작할게요.</p>
+            </div>
+
+            {/* Order summary card */}
+            <div className="bg-surface-container-lowest p-6 rounded-lg tonal-shadow text-left space-y-4 border border-outline-variant/10">
+              <div className="flex justify-between border-b border-outline-variant/10 pb-3">
+                <span className="text-on-surface-variant text-sm">주문번호</span>
+                <span className="font-bold text-on-surface">{orderUid}</span>
+              </div>
+              <div className="flex justify-between border-b border-outline-variant/10 pb-3">
+                <span className="text-on-surface-variant text-sm">상품명</span>
+                <span className="font-bold text-on-surface">{book.title}</span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-on-surface-variant text-sm">배송지</span>
+                <p className="text-on-surface text-sm leading-relaxed">{address1} {address2}<br />(받는 사람: {recipientName})</p>
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex flex-col gap-3">
+              <Link
+                href="/create"
+                className="w-full bg-primary text-on-primary py-4 rounded-xl font-jua text-xl hover:opacity-90 transition-all text-center"
+              >
+                또 만들기
+              </Link>
+              <Link
+                href="/"
+                className="w-full bg-surface-container-highest text-secondary py-4 rounded-xl font-jua text-xl hover:bg-surface-dim transition-all text-center"
+              >
+                메인으로
+              </Link>
+            </div>
           </div>
-          {/* Confetti circles */}
-          <span className="absolute -top-2 -left-4 w-3 h-3 rounded-full bg-[#D4B8E0] animate-confetti" style={{ animationDelay: '0.1s' }} />
-          <span className="absolute -top-1 left-8 w-2.5 h-2.5 rounded-full bg-[#A8E6CF] animate-confetti" style={{ animationDelay: '0.25s' }} />
-          <span className="absolute top-0 -right-3 w-3 h-3 rounded-full bg-[#FFE4A1] animate-confetti" style={{ animationDelay: '0.15s' }} />
-          <span className="absolute -top-3 right-6 w-2 h-2 rounded-full bg-[#87CEEB] animate-confetti" style={{ animationDelay: '0.3s' }} />
-        </div>
-
-        <h2 className="font-[family-name:var(--font-jua)] text-2xl text-[#2D2D2D] mt-4">
-          주문이 완료되었어요!
-        </h2>
-
-        <OrderSummary
-          orderUid={orderUid}
-          bookTitle={book.title}
-          recipientName={recipientName}
-          address={`${address1} ${address2}`.trim()}
-        />
-
-        <div className="flex gap-3 mt-8 justify-center flex-col sm:flex-row">
-          <Link href="/create">
-            <Button variant="primary" size="md">또 만들기</Button>
-          </Link>
-          <Link href="/">
-            <Button variant="outline" size="md">메인으로</Button>
-          </Link>
-        </div>
+        </main>
       </div>
-    </PageLayout>
+      <Footer />
+    </>
   );
 }
