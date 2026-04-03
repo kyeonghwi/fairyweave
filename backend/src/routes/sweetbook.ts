@@ -237,6 +237,17 @@ function handleSweetbookError(err: unknown, res: Response): void {
   }
 }
 
+// GET /api/sweetbook/book-specs — return available book specifications (local data, no API call)
+router.get('/sweetbook/book-specs', (_req: Request, res: Response) => {
+  const specs = Object.entries(BOOK_SPECS).map(([uid, spec]) => ({
+    uid,
+    name: spec.name,
+    minPages: spec.minPages,
+    maxPages: spec.maxPages,
+  }));
+  res.json({ specs });
+});
+
 // POST /api/sweetbook/books
 // Body: { bookId: string }
 // Response: { bookUid: string }
