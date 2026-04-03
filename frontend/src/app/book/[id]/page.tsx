@@ -5,7 +5,7 @@ import Link from 'next/link';
 import TopNavBar from '../../../components/TopNavBar';
 import SideNavBar from '../../../components/SideNavBar';
 import Footer from '../../../components/Footer';
-import PageSlider from '../../../components/PageSlider';
+import BookViewer from '../../../components/BookViewer';
 import Button from '../../../components/ui/Button';
 import FormField from '../../../components/ui/FormField';
 import ErrorBanner from '../../../components/ErrorBanner';
@@ -179,26 +179,14 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
 
             {/* Book preview area */}
             <div className="w-full max-w-5xl">
-              <div className="bg-surface-container-low rounded-lg p-4 md:p-8 tonal-shadow">
-                <PageSlider
-                  pages={book.pages}
-                  imageUrls={book.imageUrls}
-                  currentPage={currentPage}
-                  onPageChange={setCurrentPage}
-                  bookTitle={book.title}
-                />
-              </div>
+              <BookViewer
+                pages={book.pages}
+                imageUrls={book.imageUrls}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+                bookTitle={book.title}
+              />
             </div>
-
-            {/* Story text */}
-            {book.pages[currentPage] && (
-              <div className="mt-12 max-w-2xl text-center">
-                <span className="material-symbols-outlined text-primary-container text-5xl opacity-40 mb-2">format_quote</span>
-                <p className="font-jua text-2xl md:text-3xl text-on-surface leading-relaxed word-break-keep">
-                  &ldquo;{book.pages[currentPage].text}&rdquo;
-                </p>
-              </div>
-            )}
 
             {/* CTA */}
             <button

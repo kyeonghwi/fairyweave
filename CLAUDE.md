@@ -52,3 +52,10 @@ npm run dev   # 루트에서 실행 — 프론트 + 백엔드 동시 시작
 - 텍스트: `gemini-2.5-flash`
 - 이미지: `gemini-2.5-flash-image`
 - (gemini-2.0-flash는 신규 계정 사용 불가)
+
+## 안전 규칙
+
+- AI 작업 전 반드시 `git add . && git commit -m "checkpoint"` 실행
+- 삭제 명령어(`rm -rf`, `rmdir /s /q`)는 반드시 수동 확인 후 승인
+- 작업 범위는 프로젝트 루트 폴더 내로 한정
+- PowerShell과 CMD 혼용 금지 — 순수 PowerShell 또는 bash 사용

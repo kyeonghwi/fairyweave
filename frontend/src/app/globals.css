@@ -105,6 +105,18 @@
   100% { opacity: 0; transform: translateY(-80px) scale(0.5); }
 }
 
+@keyframes flipForward {
+  0%   { transform: perspective(1500px) rotateY(0deg); }
+  50%  { transform: perspective(1500px) rotateY(-90deg); box-shadow: -8px 0 20px rgba(0,0,0,0.3); }
+  100% { transform: perspective(1500px) rotateY(-180deg); }
+}
+
+@keyframes flipBackward {
+  0%   { transform: perspective(1500px) rotateY(0deg); }
+  50%  { transform: perspective(1500px) rotateY(90deg); box-shadow: 8px 0 20px rgba(0,0,0,0.3); }
+  100% { transform: perspective(1500px) rotateY(180deg); }
+}
+
 /* Utility animation classes */
 .animate-slideDown { animation: slideDown 300ms ease-out forwards; }
 .animate-slideInRight { animation: slideInRight 300ms ease-out forwards; }
@@ -115,6 +127,8 @@
 .animate-slidePageRight { animation: slidePageRight 250ms ease-out forwards; }
 .animate-slidePageLeft { animation: slidePageLeft 250ms ease-out forwards; }
 .animate-confetti { animation: confettiUp 1.2s ease-out forwards; }
+.animate-flipForward { animation: flipForward 600ms ease-in-out forwards; }
+.animate-flipBackward { animation: flipBackward 600ms ease-in-out forwards; }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
@@ -126,7 +140,9 @@
   .animate-float,
   .animate-slidePageRight,
   .animate-slidePageLeft,
-  .animate-confetti {
+  .animate-confetti,
+  .animate-flipForward,
+  .animate-flipBackward {
     animation: none !important;
   }
 }
