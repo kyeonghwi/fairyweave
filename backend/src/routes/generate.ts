@@ -1,9 +1,10 @@
 import { Router, Request, Response } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { generateStory } from '../services/storyGenerator';
-import { generateImages } from '../services/imageGenerator';
-import { bookStore, generateId } from '../services/bookStore';
-import type { GenerateStoryRequest, BookRecord } from '../types/story';
+import { generateImages, generateCoverImage, PLACEHOLDER_IMAGE } from '../services/imageGenerator';
+import { bookStore, generateId, progressTracker } from '../services/bookStore';
+import type { GenerateStoryRequest, BookRecord, BookSpecUid } from '../types/story';
+import { BOOK_SPECS } from '../types/story';
 
 const router = Router();
 
@@ -110,8 +111,8 @@ router.post('/generate-story', async (req: Request, res: Response) => {
     return;
   }
 
-  if (typeof age !== 'number' || age < 1 || age > 12) {
-    res.status(400).json({ error: 'age must be a number between 1 and 12' });
+  if (typeof age !== 'number' || age < 1 || age > 10) {
+    res.status(400).json({ error: 'age must be a number between 1 and 10' });
     return;
   }
 
@@ -119,9 +120,9 @@ router.post('/generate-story', async (req: Request, res: Response) => {
 
   try {
     console.log(`[/api/generate-story] Generating story for ${childName} (age ${age}), theme: ${theme}`);
-    const pages = await generateStory({ childName, age, theme, moral: effectiveMoral });
-    console.log(`[/api/generate-story] Generated ${pages.length} pages`);
-    res.json({ pages });
+    const result = await generateStory({ childName, age, theme, moral: effectiveMoral });
+    console.log(`[/api/generate-story] Generated ${result.pages.length} pages, title="${result.title}"`);
+    res.json(result);
   } catch (err) {
     console.error('[/api/generate-story] Error:', err);
     res.status(500).json({ error: 'Story generation failed' });
@@ -130,7 +131,7 @@ router.post('/generate-story', async (req: Request, res: Response) => {
 
 // POST /api/generate-book — full pipeline: story + images + store (Phase 2)
 router.post('/generate-book', async (req: Request, res: Response) => {
-  const { childName, age, theme, moral } = req.body as Partial<GenerateStoryRequest>;
+  const { childName, age, theme, moral, skipImages, bookSpecUid: rawSpec, pageCount: rawPageCount, title: rawTitle } = req.body as Partial<GenerateStoryRequest> & { skipImages?: boolean };
 
   if (!childName || !age || !theme) {
     res.status(400).json({
@@ -140,49 +141,97 @@ router.post('/generate-book', async (req: Request, res: Response) => {
     return;
   }
 
-  if (typeof age !== 'number' || age < 1 || age > 12) {
-    res.status(400).json({ error: 'age must be a number between 1 and 12' });
+  if (typeof age !== 'number' || age < 1 || age > 10) {
+    res.status(400).json({ error: 'age must be a number between 1 and 10' });
     return;
   }
 
   const effectiveMoral = moral?.trim() || '재미있고 따뜻한 이야기';
+  const bookSpecUid: BookSpecUid = (rawSpec && rawSpec in BOOK_SPECS) ? rawSpec : 'SQUAREBOOK_HC';
+  const pageCount = (typeof rawPageCount === 'number' && rawPageCount >= 8 && rawPageCount <= 40) ? rawPageCount : 16;
+  const bookId = generateId();
+
+  // Return bookId immediately so frontend can start polling
+  progressTracker.start(bookId, pageCount);
+  res.json({ bookId });
+
+  // Run pipeline in background
+  const title = rawTitle?.trim() || undefined;
+  const request = { childName, age, theme, moral: effectiveMoral, bookSpecUid, pageCount, title };
+  console.log(`[/api/generate-book] Starting full pipeline for ${childName}, bookId=${bookId}${skipImages ? ' (images skipped)' : ''}`);
 
   try {
-    const request = { childName, age, theme, moral: effectiveMoral };
-    console.log(`[/api/generate-book] Starting full pipeline for ${childName}`);
-
-    // Step 1: Generate story text + image prompts
+    // Step 1: Generate story (includes title + cover prompt)
     console.log('[/api/generate-book] Step 1: Generating story...');
-    const pages = await generateStory(request);
-    console.log(`[/api/generate-book] Story generated: ${pages.length} pages`);
+    const storyResult = await generateStory(request);
+    console.log(`[/api/generate-book] Story generated: ${storyResult.pages.length} pages, title="${storyResult.title}"`);
 
-    // Step 2: Generate all 16 images in parallel
-    console.log('[/api/generate-book] Step 2: Generating 16 images in parallel...');
-    const imageUrls = await generateImages(pages);
-    const successCount = imageUrls.filter(url => !url.startsWith('data:image/svg')).length;
-    console.log(`[/api/generate-book] Images generated: ${successCount}/16 succeeded`);
+    // Step 2: Generate content images (or use placeholders if skipped)
+    let imageUrls: string[];
+    if (skipImages) {
+      imageUrls = storyResult.pages.map(() => PLACEHOLDER_IMAGE);
+      console.log('[/api/generate-book] Step 2: Images skipped by user');
+    } else {
+      progressTracker.setStep(bookId, 'images');
+      console.log('[/api/generate-book] Step 2: Generating images (concurrency=4)...');
+      imageUrls = await generateImages(storyResult.pages, () => {
+        progressTracker.incrementImages(bookId);
+      });
+      const successCount = imageUrls.filter(url => !url.startsWith('data:image/svg')).length;
+      console.log(`[/api/generate-book] Images generated: ${successCount}/${storyResult.pages.length} succeeded`);
+    }
 
-    // Step 3: Store the book
-    const bookId = generateId();
+    // Step 3: Generate cover image
+    let coverImageUrl: string;
+    if (skipImages) {
+      coverImageUrl = PLACEHOLDER_IMAGE;
+      console.log('[/api/generate-book] Step 3: Cover image skipped');
+    } else {
+      progressTracker.setStep(bookId, 'cover');
+      console.log('[/api/generate-book] Step 3: Generating cover image...');
+      coverImageUrl = await generateCoverImage(storyResult.coverImagePrompt);
+      console.log('[/api/generate-book] Cover image generated');
+    }
+
+    // Step 4: Store the book
     const book: BookRecord = {
       id: bookId,
+      title: storyResult.title,
       request,
-      pages,
+      pages: storyResult.pages,
       imageUrls,
+      coverImageUrl,
+      bookSpecUid,
       createdAt: new Date().toISOString(),
     };
     bookStore.save(book);
+    progressTracker.setStep(bookId, 'done');
     console.log(`[/api/generate-book] Book saved with id: ${bookId}`);
-
-    res.json({
-      bookId,
-      pages,
-      imageUrls,
-    });
   } catch (err) {
     console.error('[/api/generate-book] Error:', err);
-    res.status(500).json({ error: 'Book generation failed' });
+    progressTracker.remove(bookId);
   }
+});
+
+// GET /api/generate-book/:id/status — poll generation progress
+router.get('/generate-book/:id/status', (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  // If book is already complete and stored, return done
+  const book = bookStore.get(id);
+  if (book) {
+    const total = book.pages.length;
+    res.json({ step: 'done', imagesCompleted: total, totalImages: total });
+    return;
+  }
+
+  const progress = progressTracker.get(id);
+  if (!progress) {
+    res.status(404).json({ error: 'not_found' });
+    return;
+  }
+
+  res.json(progress);
 });
 
 // GET /api/books/:id — retrieve a generated book

@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { generateRouter } from './routes/generate';
 import { sweebookRouter } from './routes/sweetbook';
+import { initTemplates } from './services/sweebookClient';
 
 dotenv.config();
 
@@ -10,7 +11,7 @@ const app = express();
 const PORT = 3001;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -19,8 +20,16 @@ app.get('/health', (_req, res) => {
 app.use('/api', generateRouter);
 app.use('/api', sweebookRouter);
 
-app.listen(PORT, () => {
-  console.log(`Backend running on http://localhost:${PORT}`);
+async function start() {
+  await initTemplates();
+  app.listen(PORT, () => {
+    console.log(`Backend running on http://localhost:${PORT}`);
+  });
+}
+
+start().catch((err) => {
+  console.error('[startup] Failed:', err);
+  process.exit(1);
 });
 
 export default app;

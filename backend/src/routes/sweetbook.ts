@@ -1,8 +1,10 @@
 import { Router, Request, Response } from 'express';
 import { randomUUID } from 'node:crypto';
 import { deflateSync } from 'node:zlib';
-import { sweetbookClient } from '../services/sweebookClient';
+import { sweetbookClient, getTemplatesForSpec } from '../services/sweebookClient';
 import { bookStore } from '../services/bookStore';
+import { BOOK_SPECS } from '../types/story';
+import type { BookSpecUid } from '../types/story';
 import {
   SweetbookApiError,
   SweetbookNetworkError,
@@ -92,14 +94,16 @@ async function createSweetbookBook(
   pages: { pageNumber: number; text: string; imagePrompt: string }[],
   imageUrls: string[],
   logPrefix: string,
+  bookSpecUid: BookSpecUid = 'SQUAREBOOK_HC',
+  coverImageDataUri?: string,
 ): Promise<string> {
-  const coverTemplateUid = process.env.SWEETBOOK_COVER_TEMPLATE_UID!;
-  const contentTemplateUid = process.env.SWEETBOOK_CONTENT_TEMPLATE_UID!;
-  const BLANK_TEMPLATE_UID = '2mi1ao0Z4Vxl';
+  const { coverTemplateUid, contentTemplateUid } = await getTemplatesForSpec(bookSpecUid);
+  const blankTemplateUid = process.env.SWEETBOOK_BLANK_TEMPLATE_UID || '2mi1ao0Z4Vxl';
+  const { minPages } = BOOK_SPECS[bookSpecUid];
 
   // Step 1: Create book
   const bookResult = await sweetbookClient.books.create({
-    bookSpecUid: 'SQUAREBOOK_HC',
+    bookSpecUid,
     title: bookTitle,
     creationType: 'TEST',
   }).catch((err: unknown) => {
@@ -114,7 +118,7 @@ async function createSweetbookBook(
   console.log(`[${logPrefix}] Step 1 done. bookUid=${bookUid}`);
 
   try {
-    // Step 2: Upload images sequentially
+    // Step 2: Upload images sequentially (content + cover)
     const photoRefs: string[] = [];
     for (let i = 0; i < imageUrls.length; i++) {
       const file = dataUriToFile(imageUrls[i], `photo_${i + 1}.png`);
@@ -123,10 +127,21 @@ async function createSweetbookBook(
       console.log(`[${logPrefix}] Step 2: uploaded photo ${i + 1}/${imageUrls.length}`);
     }
 
-    // Step 3: Create cover using first image
+    // Upload cover image (separate from content photos)
+    let coverPhotoRef: string;
+    if (coverImageDataUri) {
+      const coverFile = dataUriToFile(coverImageDataUri, 'cover.png');
+      const coverPhoto = await sweetbookClient.photos.upload(bookUid, coverFile) as Record<string, unknown>;
+      coverPhotoRef = extractPhotoRef(coverPhoto);
+      console.log(`[${logPrefix}] Step 2: uploaded cover photo`);
+    } else {
+      coverPhotoRef = photoRefs[0];
+    }
+
+    // Step 3: Create cover using dedicated cover image
     const year = new Date().getFullYear().toString();
     await sweetbookClient.covers.create(bookUid, coverTemplateUid, {
-      coverPhoto: photoRefs[0], title: bookTitle, dateRange: year,
+      coverPhoto: coverPhotoRef, title: bookTitle, dateRange: year,
     });
     console.log(`[${logPrefix}] Step 3: cover created`);
 
@@ -142,10 +157,10 @@ async function createSweetbookBook(
     }
     console.log(`[${logPrefix}] Step 4: ${pages.length} pages inserted`);
 
-    // Step 4b: Pad to minimum 24 pages with blank pages (SQUAREBOOK_HC minimum)
-    const blankCount = Math.max(0, 24 - pages.length);
+    // Step 4b: Pad to minimum page count for this bookSpec
+    const blankCount = Math.max(0, minPages - pages.length);
     for (let i = 0; i < blankCount; i++) {
-      await sweetbookClient.contents.insert(bookUid, BLANK_TEMPLATE_UID, {}, { breakBefore: 'page' });
+      await sweetbookClient.contents.insert(bookUid, blankTemplateUid, {}, { breakBefore: 'page' });
     }
     if (blankCount > 0) {
       console.log(`[${logPrefix}] Step 4b: added ${blankCount} blank pages`);
@@ -163,6 +178,21 @@ async function createSweetbookBook(
     });
     throw err;
   }
+}
+
+// Extract pricing and status fields from an order result
+function extractOrderResponse(orderResult: Record<string, unknown>) {
+  const items = orderResult.items as Array<Record<string, unknown>> | undefined;
+  return {
+    orderUid: orderResult.orderUid as string | undefined,
+    totalProductAmount: orderResult.totalProductAmount as number | undefined,
+    totalShippingFee: orderResult.totalShippingFee as number | undefined,
+    totalPackagingFee: orderResult.totalPackagingFee as number | undefined,
+    totalAmount: orderResult.totalAmount as number | undefined,
+    orderStatusDisplay: orderResult.orderStatusDisplay as string | undefined,
+    pageCount: items?.[0]?.pageCount as number | undefined,
+    unitPrice: items?.[0]?.unitPrice as number | undefined,
+  };
 }
 
 // Map Sweetbook SDK errors to HTTP responses
@@ -195,10 +225,8 @@ router.post('/sweetbook/books', async (req: Request, res: Response) => {
     return;
   }
 
-  const bookTitle = `${record.request.childName}의 동화책`;
-
   try {
-    const bookUid = await createSweetbookBook(bookTitle, record.pages, record.imageUrls, '/api/sweetbook/books');
+    const bookUid = await createSweetbookBook(record.title, record.pages, record.imageUrls, '/api/sweetbook/books', record.bookSpecUid, record.coverImageUrl);
     res.json({ bookUid });
   } catch (err: unknown) {
     handleSweetbookError(err, res);
@@ -253,14 +281,14 @@ router.post('/sweetbook/orders', async (req: Request, res: Response) => {
       externalRef,
     }) as Record<string, unknown>;
 
-    const orderUid = orderResult.orderUid as string | undefined;
-    if (!orderUid) {
+    const orderResponse = extractOrderResponse(orderResult);
+    if (!orderResponse.orderUid) {
       res.status(500).json({ error: 'orders.create returned no orderUid', raw: orderResult });
       return;
     }
 
-    console.log(`[/api/sweetbook/orders] Order created. orderUid=${orderUid}, externalRef=${externalRef}`);
-    res.json({ orderUid });
+    console.log(`[/api/sweetbook/orders] Order created. orderUid=${orderResponse.orderUid}, externalRef=${externalRef}`);
+    res.json(orderResponse);
   } catch (err: unknown) {
     console.error('[/api/sweetbook/orders] Error:', err);
     handleSweetbookError(err, res);
@@ -272,10 +300,13 @@ router.post('/sweetbook/orders', async (req: Request, res: Response) => {
 // Creates book + order in one call (for dummy books and direct-data ordering)
 // Response: { bookUid: string, orderUid: string }
 router.post('/sweetbook/books-from-data', async (req: Request, res: Response) => {
-  const { pages, imageUrls, request: bookRequest, shipping } = req.body as {
+  const { pages, imageUrls, request: bookRequest, shipping, bookSpecUid: rawSpec, title: rawTitle, coverImageUrl } = req.body as {
     pages?: { pageNumber: number; text: string; imagePrompt: string }[];
     imageUrls?: string[];
     request?: { childName: string; age: number; theme: string; moral: string };
+    bookSpecUid?: string;
+    title?: string;
+    coverImageUrl?: string;
     shipping?: {
       recipientName: string;
       recipientPhone: string;
@@ -295,10 +326,11 @@ router.post('/sweetbook/books-from-data', async (req: Request, res: Response) =>
     return;
   }
 
-  const bookTitle = `${bookRequest.childName}의 동화책`;
+  const bookSpecUid: BookSpecUid = (rawSpec && rawSpec in BOOK_SPECS) ? rawSpec as BookSpecUid : 'SQUAREBOOK_HC';
+  const bookTitle = rawTitle || `${bookRequest.childName}의 동화책`;
 
   try {
-    const bookUid = await createSweetbookBook(bookTitle, pages, imageUrls, '/api/sweetbook/books-from-data');
+    const bookUid = await createSweetbookBook(bookTitle, pages, imageUrls, '/api/sweetbook/books-from-data', bookSpecUid, coverImageUrl);
 
     // Create order
     const externalRef = randomUUID();
@@ -315,15 +347,44 @@ router.post('/sweetbook/books-from-data', async (req: Request, res: Response) =>
       externalRef,
     }) as Record<string, unknown>;
 
-    const orderUid = orderResult.orderUid as string | undefined;
-    if (!orderUid) {
+    const orderResponse = extractOrderResponse(orderResult);
+    if (!orderResponse.orderUid) {
       res.status(500).json({ error: 'orders.create returned no orderUid', raw: orderResult });
       return;
     }
 
-    console.log(`[/api/sweetbook/books-from-data] Order created. orderUid=${orderUid}`);
-    res.json({ bookUid, orderUid });
+    console.log(`[/api/sweetbook/books-from-data] Order created. orderUid=${orderResponse.orderUid}`);
+    res.json({ bookUid, ...orderResponse });
   } catch (err: unknown) {
+    handleSweetbookError(err, res);
+  }
+});
+
+// GET /api/sweetbook/orders/:orderUid — query order status
+router.get('/sweetbook/orders/:orderUid', async (req: Request, res: Response) => {
+  const { orderUid } = req.params;
+
+  try {
+    const result = await sweetbookClient.orders.get(orderUid) as Record<string, unknown>;
+    const items = result.items as Array<Record<string, unknown>> | undefined;
+    res.json({
+      orderUid: result.orderUid,
+      orderStatus: result.orderStatus,
+      orderStatusDisplay: result.orderStatusDisplay,
+      totalProductAmount: result.totalProductAmount,
+      totalShippingFee: result.totalShippingFee,
+      totalAmount: result.totalAmount,
+      recipientName: result.recipientName,
+      address1: result.address1,
+      items: items?.map((item) => ({
+        bookTitle: item.bookTitle,
+        quantity: item.quantity,
+        pageCount: item.pageCount,
+        unitPrice: item.unitPrice,
+      })),
+    });
+  } catch (err: unknown) {
+    console.error(`[/api/sweetbook/orders/${orderUid}] Error:`, err);
     handleSweetbookError(err, res);
   }
 });
