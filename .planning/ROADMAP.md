@@ -147,21 +147,21 @@ Plans:
 
 ---
 
-## Phase 8 — Bilingual Book + Vocabulary Page
+## Phase 8 — Bilingual Book
 
-**Goal:** 영어/한국어/이중언어 모드 + 단어장 자동 생성으로 에듀테크 가치 추가
+**Goal:** 영어/한국어/이중언어 모드 선택으로 다국어 동화책 생성
 
 **Deliverables:**
 - 책 생성 폼에 언어 옵션 [한국어 / 영어 / 이중언어] 추가
 - 이중언어 모드: 페이지 상단 영어, 하단 한국어
-- Gemini 프롬프트에 핵심 영단어 5개 + 뜻 JSON 반환 요청
-- 책 마지막 페이지에 Vocabulary 섹션 자동 렌더링
+- Gemini 프롬프트에 언어별 분기 로직
 
 **Depends on:** Phase 7
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 8 to break down)
+- [ ] 08-01-PLAN.md — Backend types + Gemini prompt language branching + route update
+- [ ] 08-02-PLAN.md — Frontend language selector + bilingual BookPage layout + prop threading
 
 ---
 
