@@ -69,7 +69,6 @@ export async function initTemplates(): Promise<void> {
   // If both env vars are set, use them as SQUAREBOOK_HC default
   if (coverOverride && contentOverride) {
     _templateCacheMap.set('SQUAREBOOK_HC', { coverTemplateUid: coverOverride, contentTemplateUid: contentOverride });
-    console.log('[SweetbookClient] SQUAREBOOK_HC templates loaded from env vars');
     return;
   }
 
@@ -77,7 +76,6 @@ export async function initTemplates(): Promise<void> {
   try {
     const templates = await fetchTemplatesForSpec('SQUAREBOOK_HC');
     _templateCacheMap.set('SQUAREBOOK_HC', templates);
-    console.log(`[SweetbookClient] SQUAREBOOK_HC templates cached: cover=${templates.coverTemplateUid}, content=${templates.contentTemplateUid}`);
   } catch (err) {
     if (coverOverride && contentOverride) {
       _templateCacheMap.set('SQUAREBOOK_HC', { coverTemplateUid: coverOverride, contentTemplateUid: contentOverride });
@@ -99,7 +97,6 @@ export async function getTemplatesForSpec(bookSpecUid: BookSpecUid): Promise<Tem
   // Lazy-fetch templates for this spec
   const templates = await fetchTemplatesForSpec(bookSpecUid);
   _templateCacheMap.set(bookSpecUid, templates);
-  console.log(`[SweetbookClient] ${bookSpecUid} templates cached: cover=${templates.coverTemplateUid}, content=${templates.contentTemplateUid}`);
   return templates;
 }
 

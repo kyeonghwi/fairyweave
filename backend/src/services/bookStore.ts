@@ -58,6 +58,15 @@ export const progressTracker = {
   get(id: string): GenerationProgress | undefined {
     return progressStore.get(id);
   },
+  setError(id: string, reason: string): void {
+    const p = progressStore.get(id);
+    if (p) {
+      p.step = 'error';
+      p.reason = reason;
+    } else {
+      progressStore.set(id, { step: 'error', imagesCompleted: 0, totalImages: 0, reason });
+    }
+  },
   remove(id: string): void {
     progressStore.delete(id);
   },

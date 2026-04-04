@@ -111,6 +111,11 @@ export default function CreatePage() {
           setProgress(100);
           setStepText('완성!');
           setTimeout(() => router.push(`/book/${id}`), 600);
+        } else if (status.step === 'error') {
+          stopPolling();
+          setLoading(false);
+          setProgress(0);
+          setApiError(status.reason ?? '생성 중 문제가 발생했어요. 다시 시도해 주세요.');
         }
       } catch (err) {
         console.warn('[FairyWeave] polling error, will retry:', err);

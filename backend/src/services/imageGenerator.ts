@@ -27,7 +27,6 @@ async function generateSingleImage(
 ): Promise<string> {
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
-      console.log(`[imageGenerator] Generating image ${pageNum}/${totalPages}${attempt > 0 ? ` (retry ${attempt})` : ''}...`);
       const result = await model.generateContent(prompt);
       const parts = result.response.candidates?.[0]?.content?.parts ?? [];
       for (const part of parts) {

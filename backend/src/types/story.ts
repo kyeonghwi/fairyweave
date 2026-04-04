@@ -44,7 +44,8 @@ export interface BookRecord {
 }
 
 export interface GenerationProgress {
-  step: 'story' | 'images' | 'cover' | 'done';
+  step: 'story' | 'images' | 'cover' | 'done' | 'error';
   imagesCompleted: number;
   totalImages: number;
+  reason?: string;
 }

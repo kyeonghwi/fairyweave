@@ -23,7 +23,7 @@ app.use('/api', sweebookRouter);
 async function start() {
   await initTemplates();
   app.listen(PORT, () => {
-    console.log(`Backend running on http://localhost:${PORT}`);
+    // intentionally silent — check health endpoint at /health
   });
 }
 

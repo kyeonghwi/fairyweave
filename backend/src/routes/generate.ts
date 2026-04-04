@@ -32,8 +32,6 @@ router.post('/generate', async (req: Request, res: Response) => {
     const result = await model.generateContent(prompt);
     const text = result.response.text();
 
-    console.log('[/api/generate] Gemini text response:', text.slice(0, 200));
-
     res.json({ text });
   } catch (err) {
     console.error('[/api/generate] Error:', err);
@@ -79,7 +77,6 @@ router.post('/generate-image', async (req: Request, res: Response) => {
     }
 
     if (imageBase64) {
-      console.log('[/api/generate-image] Gemini image received, mimeType:', imageMimeType);
       res.json({
         image: `data:${imageMimeType};base64,${imageBase64}`,
         mimeType: imageMimeType,
@@ -121,9 +118,7 @@ router.post('/generate-story', async (req: Request, res: Response) => {
   const language: Language = (rawLanguage && validLanguages.includes(rawLanguage)) ? rawLanguage : 'korean';
 
   try {
-    console.log(`[/api/generate-story] Generating story for ${childName} (age ${age}), theme: ${theme}, language: ${language}`);
     const result = await generateStory({ childName, age, theme, moral: effectiveMoral, language });
-    console.log(`[/api/generate-story] Generated ${result.pages.length} pages, title="${result.title}"`);
     res.json(result);
   } catch (err) {
     console.error('[/api/generate-story] Error:', err);
@@ -162,39 +157,29 @@ router.post('/generate-book', async (req: Request, res: Response) => {
   // Run pipeline in background
   const title = rawTitle?.trim() || undefined;
   const request = { childName, age, theme, moral: effectiveMoral, bookSpecUid, pageCount, title, language };
-  console.log(`[/api/generate-book] Starting full pipeline for ${childName}, bookId=${bookId}${skipImages ? ' (images skipped)' : ''}`);
 
   try {
     // Step 1: Generate story (includes title + cover prompt)
-    console.log('[/api/generate-book] Step 1: Generating story...');
     const storyResult = await generateStory(request);
-    console.log(`[/api/generate-book] Story generated: ${storyResult.pages.length} pages, title="${storyResult.title}"`);
 
     // Step 2: Generate content images (or use placeholders if skipped)
     let imageUrls: string[];
     if (skipImages) {
       imageUrls = storyResult.pages.map(() => PLACEHOLDER_IMAGE);
-      console.log('[/api/generate-book] Step 2: Images skipped by user');
     } else {
       progressTracker.setStep(bookId, 'images');
-      console.log('[/api/generate-book] Step 2: Generating images (concurrency=4)...');
       imageUrls = await generateImages(storyResult.pages, () => {
         progressTracker.incrementImages(bookId);
       });
-      const successCount = imageUrls.filter(url => !url.startsWith('data:image/svg')).length;
-      console.log(`[/api/generate-book] Images generated: ${successCount}/${storyResult.pages.length} succeeded`);
     }
 
     // Step 3: Generate cover image
     let coverImageUrl: string;
     if (skipImages) {
       coverImageUrl = PLACEHOLDER_IMAGE;
-      console.log('[/api/generate-book] Step 3: Cover image skipped');
     } else {
       progressTracker.setStep(bookId, 'cover');
-      console.log('[/api/generate-book] Step 3: Generating cover image...');
       coverImageUrl = await generateCoverImage(storyResult.coverImagePrompt);
-      console.log('[/api/generate-book] Cover image generated');
     }
 
     // Step 4: Store the book
@@ -210,10 +195,9 @@ router.post('/generate-book', async (req: Request, res: Response) => {
     };
     bookStore.save(book);
     progressTracker.setStep(bookId, 'done');
-    console.log(`[/api/generate-book] Book saved with id: ${bookId}`);
   } catch (err) {
     console.error('[/api/generate-book] Error:', err);
-    progressTracker.remove(bookId);
+    progressTracker.setError(bookId, (err as Error).message ?? 'Generation failed');
   }
 });
 

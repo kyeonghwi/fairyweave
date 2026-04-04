@@ -79,7 +79,7 @@ Gemini 레퍼런스 이미지로 캐릭터 일관성 강화, 부모가 스토리
 ## 구글폼 문항
 
 ### 문항 1: 과제 수행 과정
-Phase 1에서 Next.js 16 + Express 모노레포를 구성하고 Gemini 2.5 Flash API 연동을 검증했습니다. Phase 2에서 메타-프롬프트 엔지니어링으로 16페이지 스토리 JSON 생성 파이프라인을 만들고, Promise.allSettled로 16장 삽화를 병렬 생성했습니다. Phase 3에서 Sweetbook SDK로 5-step 책 생성(create → upload → cover → contents → finalize) + 주문 플로우를 구현했습니다. Phase 4에서 프론트엔드 UI 3페이지(홈/생성/책 프리뷰+주문)와 더미 데이터 5권을 완성했습니다. Phase 5에서 멀티 책 사양(3종), 비동기 생성+폴링 UX, 표지 이미지 분리, 이미지 동시생성 워커 풀, 한국어 현지화, 주문 가격 표시를 추가하고 제출 문서를 정리했습니다.
+Phase 1에서 Next.js 16 + Express 모노레포를 구성하고 Gemini 2.5 Flash API 연동을 검증했습니다. Phase 2에서 메타-프롬프트 엔지니어링으로 16페이지 스토리 JSON 생성 파이프라인을 만들고, Promise.allSettled로 16장 삽화를 병렬 생성했습니다. Phase 3에서 Sweetbook SDK로 5-step 책 생성(create → upload → cover → contents → finalize) + 주문 플로우를 구현했습니다. Phase 4에서 프론트엔드 UI 3페이지(홈/생성/책 프리뷰+주문)와 더미 데이터 5권을 완성했습니다. Phase 5에서 멀티 책 사양(3종), 비동기 생성+폴링 UX, 표지 이미지 분리, 이미지 동시생성 워커 풀, 한국어 현지화, 주문 가격 표시를 추가했습니다. Phase 6에서 실제 동화책처럼 보이는 BookViewer를 구현했습니다. 데스크탑은 좌(일러스트)/우(텍스트) 오픈북 스프레드에 CSS 3D 페이지 넘김 애니메이션을 적용했고, 모바일은 이미지 위에 텍스트를 오버레이하는 뷰로 전환됩니다. Phase 7에서 주문 전 크레딧 잔액을 POST /orders/estimate로 검증하는 로직을 추가하고, 책 사양 목록을 반환하는 GET /api/sweetbook/book-specs 엔드포인트를 구현했습니다. Phase 8에서 한국어/영어/이중언어 칩 UI를 추가하고, 이중언어 선택 시 Gemini가 text(한국어)와 textEn(영어)을 동시에 생성하여 책 뷰어에 두 언어를 함께 표시하는 기능을 구현했습니다.
 
 ### 문항 2: API를 써보고 느낀 점
 SDK에 TypeScript 타입 정의가 없어서 메서드 시그니처를 추측하며 .d.ts를 직접 작성해야 했습니다. books.create → photos.upload × 16 → covers.create → contents.insert × 16 → books.finalize로 이어지는 5단계 생성 플로우는 유연하지만 진입 장벽이 높습니다. 한 번의 API 호출로 책을 생성할 수 있는 convenience 메서드가 있으면 개발 속도가 크게 개선될 것입니다. 샌드박스 환경에서 creationType: 'TEST'로 과금 없이 테스트할 수 있어 안심하고 반복 실험이 가능했습니다. multipart 업로드 시 Blob이 아닌 File 객체를 요구하는 점은 문서에 명시되어 있지 않아 디버깅에 시간이 걸렸습니다.

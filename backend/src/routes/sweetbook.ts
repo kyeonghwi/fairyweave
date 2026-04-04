@@ -115,7 +115,6 @@ async function createSweetbookBook(
   if (!bookUid) {
     throw Object.assign(new Error('books.create returned no bookUid'), { raw: bookResult });
   }
-  console.log(`[${logPrefix}] Step 1 done. bookUid=${bookUid}`);
 
   try {
     // Step 2: Upload images sequentially (content + cover)
@@ -124,7 +123,6 @@ async function createSweetbookBook(
       const file = dataUriToFile(imageUrls[i], `photo_${i + 1}.png`);
       const photo = await sweetbookClient.photos.upload(bookUid, file) as Record<string, unknown>;
       photoRefs.push(extractPhotoRef(photo));
-      console.log(`[${logPrefix}] Step 2: uploaded photo ${i + 1}/${imageUrls.length}`);
     }
 
     // Upload cover image (separate from content photos)
@@ -133,7 +131,6 @@ async function createSweetbookBook(
       const coverFile = dataUriToFile(coverImageDataUri, 'cover.png');
       const coverPhoto = await sweetbookClient.photos.upload(bookUid, coverFile) as Record<string, unknown>;
       coverPhotoRef = extractPhotoRef(coverPhoto);
-      console.log(`[${logPrefix}] Step 2: uploaded cover photo`);
     } else {
       coverPhotoRef = photoRefs[0];
     }
@@ -143,7 +140,6 @@ async function createSweetbookBook(
     await sweetbookClient.covers.create(bookUid, coverTemplateUid, {
       coverPhoto: coverPhotoRef, title: bookTitle, dateRange: year,
     });
-    console.log(`[${logPrefix}] Step 3: cover created`);
 
     // Step 4: Insert content pages
     const today = new Date().toISOString().slice(0, 10);
@@ -155,7 +151,6 @@ async function createSweetbookBook(
         diaryText: pages[i].text,
       }, { breakBefore: 'page' });
     }
-    console.log(`[${logPrefix}] Step 4: ${pages.length} pages inserted`);
 
     // Step 4b: Pad to minimum page count for this bookSpec
     const blankCount = Math.max(0, minPages - pages.length);
@@ -163,12 +158,10 @@ async function createSweetbookBook(
       await sweetbookClient.contents.insert(bookUid, blankTemplateUid, {}, { breakBefore: 'page' });
     }
     if (blankCount > 0) {
-      console.log(`[${logPrefix}] Step 4b: added ${blankCount} blank pages`);
     }
 
     // Step 5: Finalize
     await sweetbookClient.books.finalize(bookUid);
-    console.log(`[${logPrefix}] Step 5: book finalized. bookUid=${bookUid}`);
 
     return bookUid;
   } catch (err: unknown) {
@@ -303,7 +296,6 @@ router.post('/sweetbook/orders', async (req: Request, res: Response) => {
     return;
   }
 
-  console.log(`[/api/sweetbook/orders] Creating order for bookUid=${bookUid}`);
 
   try {
     await checkCreditSufficiency(bookUid!, {
@@ -335,7 +327,6 @@ router.post('/sweetbook/orders', async (req: Request, res: Response) => {
       return;
     }
 
-    console.log(`[/api/sweetbook/orders] Order created. orderUid=${orderResponse.orderUid}, externalRef=${externalRef}`);
     res.json(orderResponse);
   } catch (err: unknown) {
     console.error('[/api/sweetbook/orders] Error:', err);
@@ -410,7 +401,6 @@ router.post('/sweetbook/books-from-data', async (req: Request, res: Response) =>
       return;
     }
 
-    console.log(`[/api/sweetbook/books-from-data] Order created. orderUid=${orderResponse.orderUid}`);
     res.json({ bookUid, ...orderResponse });
   } catch (err: unknown) {
     handleSweetbookError(err, res);
