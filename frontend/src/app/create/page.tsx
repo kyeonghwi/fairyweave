@@ -26,6 +26,12 @@ const THEMES = [
   { emoji: '✏️', label: '직접 입력' },
 ];
 
+const LANGUAGES = [
+  { emoji: '🇰🇷', label: '한국어', value: 'korean' },
+  { emoji: '🇺🇸', label: '영어', value: 'english' },
+  { emoji: '🌏', label: '이중언어', value: 'bilingual' },
+] as const;
+
 interface FormErrors {
   childName?: string;
   age?: string;
@@ -44,6 +50,7 @@ export default function CreatePage() {
   const [selectedTheme, setSelectedTheme] = useState('');
   const [customTheme, setCustomTheme] = useState('');
   const [moral, setMoral] = useState('');
+  const [language, setLanguage] = useState('korean');
   const [generateImages, setGenerateImages] = useState(true);
   const [errors, setErrors] = useState<FormErrors>({});
 
@@ -140,6 +147,7 @@ export default function CreatePage() {
           bookSpecUid,
           pageCount,
           title: bookTitle.trim() || undefined,
+          language,
         }),
       });
 
@@ -220,6 +228,21 @@ export default function CreatePage() {
                         <p className="text-xs text-on-surface-variant">{spec.desc}</p>
                       </div>
                     </button>
+                  ))}
+                </div>
+              </FormField>
+
+              {/* 언어 선택 */}
+              <FormField label="언어 선택" required>
+                <div className="flex flex-wrap gap-2">
+                  {LANGUAGES.map((lang) => (
+                    <ThemeChip
+                      key={lang.value}
+                      emoji={lang.emoji}
+                      label={lang.label}
+                      selected={language === lang.value}
+                      onClick={() => setLanguage(lang.value)}
+                    />
                   ))}
                 </div>
               </FormField>
