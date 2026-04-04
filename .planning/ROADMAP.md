@@ -157,11 +157,11 @@ Plans:
 - Gemini 프롬프트에 언어별 분기 로직
 
 **Depends on:** Phase 7
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 08-01-PLAN.md — Backend types + Gemini prompt language branching + route update
-- [ ] 08-02-PLAN.md — Frontend language selector + bilingual BookPage layout + prop threading
+- [x] 08-02-PLAN.md — Frontend language selector + bilingual BookPage layout + prop threading
 
 ---
 

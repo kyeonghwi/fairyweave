@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 08-01-PLAN.md
-last_updated: "2026-04-04T04:46:17.651Z"
+stopped_at: Completed 08-02-PLAN.md
+last_updated: "2026-04-04T04:52:06.816Z"
 progress:
   total_phases: 12
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 12
-  completed_plans: 12
+  completed_plans: 13
 ---
 
 # Project State: FairyWeave
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 | 5 | Polish + Submission Prep | ✓ Complete | 2/2 |
 | 6 | Book Viewer (3D Page-flip) | ✓ Complete | 1/1 |
 | 7 | Credits API + Dev Environment | ✓ Complete | 1/1 |
-| 8 | Bilingual Book + Vocabulary Page | ◑ In Progress | 1/2 |
+| 8 | Bilingual Book + Vocabulary Page | ✓ Complete | 2/2 |
 | 9 | Parent Letter + Photo Dedication | ○ Not started | 0/? |
 | 10 | Webhook Order Tracking | ○ Not started | 0/? |
 
@@ -66,6 +66,8 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 
 - **Phase 08-01:** Language union type added as optional fields only — zero regression for Korean mode (existing callers unaffected)
 - **Phase 08-01:** getLanguageInstructions helper isolates prompt branching; bilingual mode adds textEn fallback after JSON parse to prevent null render errors
+- **Phase 08-02:** Reused ThemeChip for language selector — consistent UI without new components
+- **Phase 08-02:** Dummy books default to language 'korean' — no breaking change for existing dummy data
 
 ## Blockers
 
@@ -84,10 +86,11 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 | 05-polish-submission-prep | 01 | 5min | 2 | 3 |
 | 05-polish-submission-prep | 02 | 15min | 2 | 2 |
 | Phase 08-bilingual-book P01 | 3min | 3 tasks | 3 files |
+| Phase 08-bilingual-book P02 | 4min | 2 tasks | 5 files |
 
 ## Last Session
 
-- **Stopped at:** Completed 08-01-PLAN.md
+- **Stopped at:** Completed 08-02-PLAN.md
 - **Timestamp:** 2026-04-02T15:15:00Z
 
 ## Accumulated Context
