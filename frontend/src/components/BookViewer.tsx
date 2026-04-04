@@ -4,11 +4,12 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import BookSpread from './BookSpread';
 
 interface BookViewerProps {
-  pages: { text: string }[];
+  pages: { text: string; textEn?: string }[];
   imageUrls: string[];
   currentPage: number;
   onPageChange: (page: number) => void;
   bookTitle?: string;
+  language?: string;
 }
 
 /** Mobile-only single page view — image + text overlay at the bottom */
@@ -18,6 +19,7 @@ function MobileView({
   currentPage,
   onPageChange,
   bookTitle,
+  language,
 }: BookViewerProps) {
   const totalPages = pages.length;
   const touchStartX = useRef(0);
@@ -88,9 +90,21 @@ function MobileView({
               'linear-gradient(to top, rgba(30,20,10,0.82) 0%, rgba(30,20,10,0.55) 60%, transparent 100%)',
           }}
         >
-          <p className="font-jua text-white text-base leading-relaxed text-center word-break-keep drop-shadow">
-            {pages[currentPage]?.text}
-          </p>
+          {language === 'bilingual' && pages[currentPage]?.textEn ? (
+            <>
+              <p className="font-jua text-white text-base leading-relaxed text-center word-break-keep drop-shadow">
+                {pages[currentPage]?.text}
+              </p>
+              <div className="border-t border-white/20 my-1" />
+              <p className="text-white/90 text-sm leading-relaxed text-center drop-shadow" style={{ fontFamily: 'system-ui, sans-serif' }}>
+                {pages[currentPage]?.textEn}
+              </p>
+            </>
+          ) : (
+            <p className="font-jua text-white text-base leading-relaxed text-center word-break-keep drop-shadow">
+              {pages[currentPage]?.text}
+            </p>
+          )}
         </div>
       </div>
 

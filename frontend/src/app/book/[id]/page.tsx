@@ -18,9 +18,10 @@ interface BookData {
   title: string;
   childName: string;
   theme: string;
-  pages: { pageNumber: number; text: string; imagePrompt: string }[];
+  pages: { pageNumber: number; text: string; textEn?: string; imagePrompt: string }[];
   imageUrls: string[];
   isDummy: boolean;
+  language?: string;
 }
 
 interface OrderErrors {
@@ -69,6 +70,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
         pages: dummy.pages,
         imageUrls: dummy.imageUrls,
         isDummy: true,
+        language: 'korean',
       });
       return;
     }
@@ -84,6 +86,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
         pages: cached.pages,
         imageUrls: cached.imageUrls,
         isDummy: false,
+        language: cached.request?.language ?? 'korean',
       });
       delete (window as any).__bookCache;
       return;
@@ -104,6 +107,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
           pages: data.pages,
           imageUrls: data.imageUrls,
           isDummy: false,
+          language: data.request?.language ?? 'korean',
         });
       })
       .catch((err) => setLoadError(err.message === 'AI_BOOK_EXPIRED' ? 'AI_BOOK_EXPIRED' : err.message));
@@ -185,6 +189,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                 currentPage={currentPage}
                 onPageChange={setCurrentPage}
                 bookTitle={book.title}
+                language={book.language}
               />
             </div>
 

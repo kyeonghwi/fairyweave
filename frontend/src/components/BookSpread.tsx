@@ -4,11 +4,12 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import BookPage from './BookPage';
 
 interface BookSpreadProps {
-  pages: { text: string }[];
+  pages: { text: string; textEn?: string }[];
   imageUrls: string[];
   currentPage: number;
   onPageChange: (page: number) => void;
   bookTitle?: string;
+  language?: string;
 }
 
 type FlipDir = 'forward' | 'backward';
@@ -19,6 +20,7 @@ export default function BookSpread({
   currentPage,
   onPageChange,
   bookTitle,
+  language,
 }: BookSpreadProps) {
   const totalPages = pages.length;
 
@@ -123,6 +125,8 @@ export default function BookSpread({
           <BookPage
             type="text"
             text={pages[displayedPage]?.text}
+            textEn={pages[displayedPage]?.textEn}
+            language={language}
             pageNumber={displayedPage}
             side="right"
           />
@@ -168,6 +172,8 @@ export default function BookSpread({
                 <BookPage
                   type="text"
                   text={pages[flipFrontPage]?.text}
+                  textEn={pages[flipFrontPage]?.textEn}
+                  language={language}
                   pageNumber={flipFrontPage}
                   side="right"
                 />
@@ -203,6 +209,8 @@ export default function BookSpread({
                 <BookPage
                   type="text"
                   text={pages[flipBackPage]?.text}
+                  textEn={pages[flipBackPage]?.textEn}
+                  language={language}
                   pageNumber={flipBackPage}
                   side="right"
                 />

@@ -4,11 +4,13 @@ interface BookPageProps {
   type: 'image' | 'text' | 'blank';
   imageUrl?: string;
   text?: string;
+  textEn?: string;
+  language?: string;
   pageNumber?: number;
   side: 'left' | 'right';
 }
 
-export default function BookPage({ type, imageUrl, text, pageNumber, side }: BookPageProps) {
+export default function BookPage({ type, imageUrl, text, textEn, language, pageNumber, side }: BookPageProps) {
   if (type === 'blank') {
     return (
       <div
@@ -61,12 +63,37 @@ export default function BookPage({ type, imageUrl, text, pageNumber, side }: Boo
 
       {/* Story text */}
       <div className="px-8 py-10 flex-1 flex flex-col justify-center">
-        <p
-          className="font-jua text-on-surface leading-relaxed text-center word-break-keep"
-          style={{ fontSize: 'clamp(14px, 2.2vw, 22px)' }}
-        >
-          {text}
-        </p>
+        {language === 'bilingual' && textEn ? (
+          <>
+            {/* English text - top half */}
+            <div className="flex-1 flex flex-col justify-center">
+              <p
+                className="text-on-surface leading-relaxed text-center"
+                style={{ fontSize: 'clamp(12px, 1.8vw, 18px)', fontFamily: 'system-ui, sans-serif' }}
+              >
+                {textEn}
+              </p>
+            </div>
+            {/* Divider */}
+            <div className="border-t border-outline-variant/30 my-2" />
+            {/* Korean text - bottom half */}
+            <div className="flex-1 flex flex-col justify-center">
+              <p
+                className="font-jua text-on-surface leading-relaxed text-center word-break-keep"
+                style={{ fontSize: 'clamp(12px, 1.8vw, 18px)' }}
+              >
+                {text}
+              </p>
+            </div>
+          </>
+        ) : (
+          <p
+            className="font-jua text-on-surface leading-relaxed text-center word-break-keep"
+            style={{ fontSize: 'clamp(14px, 2.2vw, 22px)' }}
+          >
+            {text}
+          </p>
+        )}
       </div>
 
       {/* Page number at bottom */}
