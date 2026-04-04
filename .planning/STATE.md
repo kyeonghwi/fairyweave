@@ -4,12 +4,12 @@ milestone: v1.0
 milestone_name: milestone
 status: unknown
 stopped_at: Completed 05-02-PLAN.md (all phases complete)
-last_updated: "2026-04-02T15:39:09.800Z"
+last_updated: "2026-04-04T01:43:46.656Z"
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 9
-  completed_plans: 10
+  total_phases: 11
+  completed_phases: 6
+  total_plans: 10
+  completed_plans: 11
 ---
 
 # Project State: FairyWeave
@@ -34,6 +34,11 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 | 3 | Sweetbook API Integration | ✓ Complete | 2/2 |
 | 4 | Frontend UI + Dummy Data | ✓ Complete | 2/2 |
 | 5 | Polish + Submission Prep | ✓ Complete | 2/2 |
+| 6 | Book Viewer (3D Page-flip) | ✓ Complete | 1/1 |
+| 7 | Credits API + Dev Environment | ○ Not started | 0/? |
+| 8 | Bilingual Book + Vocabulary Page | ○ Not started | 0/? |
+| 9 | Parent Letter + Photo Dedication | ○ Not started | 0/? |
+| 10 | Webhook Order Tracking | ○ Not started | 0/? |
 
 ## Decisions Log
 
@@ -81,5 +86,15 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 - **Stopped at:** Completed 05-02-PLAN.md (all phases complete)
 - **Timestamp:** 2026-04-02T15:15:00Z
 
+## Accumulated Context
+
+### Roadmap Evolution
+
+- Phase 6 added: Book Viewer — 3D page-flip animation (open-book spread)
+- Phase 7 added: Credits API + concurrently dev environment setup
+- Phase 8 added: Bilingual book mode + vocabulary page auto-generation
+- Phase 9 added: Parent letter + real photo dedication page
+- Phase 10 added: Webhook-based order status tracking UI
+
 ---
-*Last updated: 2026-04-02 — All 5 phases complete, project ready for submission*
+*Last updated: 2026-04-04 — Phases 7-10 added for enhanced submission features*
