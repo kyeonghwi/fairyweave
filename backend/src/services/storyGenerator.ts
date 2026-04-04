@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import type { GenerateStoryRequest, StoryPage, GenerateStoryResult } from '../types/story';
+import type { GenerateStoryRequest, StoryPage, GenerateStoryResult, Language } from '../types/story';
 
 const STYLE_SEED = "soft watercolor children's book illustration, pastel colors";
 
@@ -19,12 +19,31 @@ function sanitize(input: string, maxLen: number): string {
     .trim();
 }
 
+function getLanguageInstructions(language: Language, childAge: number): string {
+  switch (language) {
+    case 'english':
+      return `- text must be in English, written for a ${childAge}-year-old child
+- "title": string -- the book title in English`;
+    case 'bilingual':
+      return `- Each page object must have TWO text fields:
+  - "text": Korean story text (2-3 sentences)
+  - "textEn": English story text (2-3 sentences, same meaning as Korean)
+- "title": string -- the book title in Korean
+- Generate BOTH languages for every page simultaneously`;
+    case 'korean':
+    default:
+      return `- text must be in Korean, written for a ${childAge}-year-old child
+- "title": string -- the book title in Korean`;
+  }
+}
+
 export async function generateStory(req: GenerateStoryRequest): Promise<GenerateStoryResult> {
   const childName = sanitize(req.childName, 20);
   const theme = sanitize(req.theme, 30);
   const moral = sanitize(req.moral, 100);
   const userTitle = req.title ? sanitize(req.title, 50) : '';
   const pageCount = req.pageCount ?? 16;
+  const language: Language = req.language ?? 'korean';
 
   const climaxPage = pageCount - 1;
   const bodyEnd = pageCount - 2;
@@ -49,7 +68,7 @@ RULES:
 - The child ${childName} must be the main character in every scene
 - imagePrompt and coverImagePrompt must describe scenes visually in English (characters, setting, action, mood) — do NOT include style instructions, they will be added automatically
 - coverImagePrompt should be a visually striking, cover-worthy scene that represents the whole story
-- text must be in Korean, written for a ${req.age}-year-old child
+- ${getLanguageInstructions(language, req.age)}
 - Do NOT wrap the JSON in markdown code fences or add any other text
 
 JSON object:`;
@@ -91,6 +110,15 @@ JSON object:`;
   const pages = parsed.pages;
   if (!Array.isArray(pages) || pages.length !== pageCount) {
     throw new Error(`Expected ${pageCount} pages but got ${Array.isArray(pages) ? pages.length : 'non-array'}`);
+  }
+
+  if (language === 'bilingual') {
+    for (const page of pages) {
+      if (!page.textEn) {
+        // Fallback: if Gemini didn't return textEn, copy text as-is
+        page.textEn = page.text;
+      }
+    }
   }
 
   const title = parsed.title || userTitle || `${childName}의 동화책`;
