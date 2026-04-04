@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { generateStory } from '../services/storyGenerator';
 import { generateImages, generateCoverImage, PLACEHOLDER_IMAGE } from '../services/imageGenerator';
 import { bookStore, generateId, progressTracker } from '../services/bookStore';
-import type { GenerateStoryRequest, BookRecord, BookSpecUid } from '../types/story';
+import type { GenerateStoryRequest, BookRecord, BookSpecUid, Language } from '../types/story';
 import { BOOK_SPECS } from '../types/story';
 
 const router = Router();
@@ -100,7 +100,7 @@ router.post('/generate-image', async (req: Request, res: Response) => {
 
 // POST /api/generate-story — 16-page story generation pipeline (Phase 2)
 router.post('/generate-story', async (req: Request, res: Response) => {
-  const { childName, age, theme, moral } = req.body as Partial<GenerateStoryRequest>;
+  const { childName, age, theme, moral, language: rawLanguage } = req.body as Partial<GenerateStoryRequest>;
 
   // Validate required fields (moral is optional — defaults to a fun story)
   if (!childName || !age || !theme) {
@@ -117,10 +117,12 @@ router.post('/generate-story', async (req: Request, res: Response) => {
   }
 
   const effectiveMoral = moral?.trim() || '재미있고 따뜻한 이야기';
+  const validLanguages: Language[] = ['korean', 'english', 'bilingual'];
+  const language: Language = (rawLanguage && validLanguages.includes(rawLanguage)) ? rawLanguage : 'korean';
 
   try {
-    console.log(`[/api/generate-story] Generating story for ${childName} (age ${age}), theme: ${theme}`);
-    const result = await generateStory({ childName, age, theme, moral: effectiveMoral });
+    console.log(`[/api/generate-story] Generating story for ${childName} (age ${age}), theme: ${theme}, language: ${language}`);
+    const result = await generateStory({ childName, age, theme, moral: effectiveMoral, language });
     console.log(`[/api/generate-story] Generated ${result.pages.length} pages, title="${result.title}"`);
     res.json(result);
   } catch (err) {
@@ -131,7 +133,7 @@ router.post('/generate-story', async (req: Request, res: Response) => {
 
 // POST /api/generate-book — full pipeline: story + images + store (Phase 2)
 router.post('/generate-book', async (req: Request, res: Response) => {
-  const { childName, age, theme, moral, skipImages, bookSpecUid: rawSpec, pageCount: rawPageCount, title: rawTitle } = req.body as Partial<GenerateStoryRequest> & { skipImages?: boolean };
+  const { childName, age, theme, moral, skipImages, bookSpecUid: rawSpec, pageCount: rawPageCount, title: rawTitle, language: rawLanguage } = req.body as Partial<GenerateStoryRequest> & { skipImages?: boolean };
 
   if (!childName || !age || !theme) {
     res.status(400).json({
@@ -149,6 +151,8 @@ router.post('/generate-book', async (req: Request, res: Response) => {
   const effectiveMoral = moral?.trim() || '재미있고 따뜻한 이야기';
   const bookSpecUid: BookSpecUid = (rawSpec && rawSpec in BOOK_SPECS) ? rawSpec : 'SQUAREBOOK_HC';
   const pageCount = (typeof rawPageCount === 'number' && rawPageCount >= 8 && rawPageCount <= 40) ? rawPageCount : 16;
+  const validLanguages: Language[] = ['korean', 'english', 'bilingual'];
+  const language: Language = (rawLanguage && validLanguages.includes(rawLanguage)) ? rawLanguage : 'korean';
   const bookId = generateId();
 
   // Return bookId immediately so frontend can start polling
@@ -157,7 +161,7 @@ router.post('/generate-book', async (req: Request, res: Response) => {
 
   // Run pipeline in background
   const title = rawTitle?.trim() || undefined;
-  const request = { childName, age, theme, moral: effectiveMoral, bookSpecUid, pageCount, title };
+  const request = { childName, age, theme, moral: effectiveMoral, bookSpecUid, pageCount, title, language };
   console.log(`[/api/generate-book] Starting full pipeline for ${childName}, bookId=${bookId}${skipImages ? ' (images skipped)' : ''}`);
 
   try {
