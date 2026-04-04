@@ -1,10 +1,13 @@
 export interface StoryPage {
   pageNumber: number;  // 1-16
-  text: string;        // Story text for this page (Korean)
+  text: string;        // Story text for this page (Korean, or English in english-only mode)
+  textEn?: string;     // English text (bilingual mode only)
   imagePrompt: string; // English image generation prompt with style seed included
 }
 
 export type BookSpecUid = 'SQUAREBOOK_HC' | 'PHOTOBOOK_A4_SC' | 'PHOTOBOOK_A5_SC';
+
+export type Language = 'korean' | 'english' | 'bilingual';
 
 export const BOOK_SPECS: Record<BookSpecUid, { name: string; minPages: number; maxPages: number }> = {
   SQUAREBOOK_HC:   { name: '정사각 하드커버 (243×248mm)', minPages: 24, maxPages: 130 },
@@ -20,6 +23,7 @@ export interface GenerateStoryRequest {
   bookSpecUid?: BookSpecUid;
   pageCount?: number;   // story pages to generate (default 16)
   title?: string;       // optional user-provided title; auto-generated if empty
+  language?: Language;  // default: 'korean'
 }
 
 export interface GenerateStoryResult {
