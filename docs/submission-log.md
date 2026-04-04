@@ -55,6 +55,9 @@
 | Claude Code | Phase 6 — 실제 동화책 레이아웃 조사 후 BookViewer 구현: 데스크탑 오픈북 spread(좌=일러스트/우=텍스트), CSS 3D flipForward/flipBackward 페이지 넘김 애니메이션, 모바일 이미지+텍스트 오버레이 뷰 | 2026-04-03 |
 | Claude Code | Phase 6 — 페이지 넘김 애니메이션 버그픽스: back-face 미러링 제거, z-index 타이밍 조정, translateX 방향 수정으로 자연스러운 플립 동작 완성 | 2026-04-03 |
 | Claude Code | Phase 7 — credits 검증 로직 및 book-specs 엔드포인트 구현: POST /orders/estimate 호출로 주문 전 잔액 확인, 부족 시 402 반환, GET /api/sweetbook/book-specs 로컬 엔드포인트 추가 | 2026-04-04 |
+| Claude Code | Phase 8 — Language 유니온 타입 추가, StoryPage.textEn 옵셔널 필드, GenerateStoryRequest.language 옵셔널 필드 (story.ts 타입 확장) | 2026-04-04 |
+| Claude Code | Phase 8 — storyGenerator에 언어별 프롬프트 분기 추가: korean(기존 동일), english(영어 텍스트), bilingual(text=한국어, textEn=영어 동시 생성) | 2026-04-04 |
+| Claude Code | Phase 8 — generate.ts 라우트에서 language 파라미터 추출 및 검증, generateStory 호출 시 전달 (generate-story + generate-book 양쪽) | 2026-04-04 |
 | Gemini 2.5 Flash | 텍스트 스토리 생성 API 호출 검증 | 2026-04-01 |
 | Gemini 2.5 Flash Image | 이미지 생성 API 호출 검증 (base64 PNG 반환 확인) | 2026-04-01 |
 

@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 05-02-PLAN.md (all phases complete)
-last_updated: "2026-04-04T01:43:46.656Z"
+stopped_at: Completed 08-01-PLAN.md
+last_updated: "2026-04-04T04:46:17.651Z"
 progress:
-  total_phases: 11
+  total_phases: 12
   completed_phases: 6
-  total_plans: 10
-  completed_plans: 11
+  total_plans: 12
+  completed_plans: 12
 ---
 
 # Project State: FairyWeave
@@ -19,7 +19,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-01)
 
 **Core value:** 부모가 입력한 아이 정보로 세상에 단 하나뿐인 동화책을 3분 안에 만들어 주문할 수 있어야 한다.
-**Current focus:** Phase 05 — polish-submission-prep
+**Current focus:** Phase 08 — bilingual-book
 
 ## Progress
 
@@ -35,8 +35,8 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 | 4 | Frontend UI + Dummy Data | ✓ Complete | 2/2 |
 | 5 | Polish + Submission Prep | ✓ Complete | 2/2 |
 | 6 | Book Viewer (3D Page-flip) | ✓ Complete | 1/1 |
-| 7 | Credits API + Dev Environment | ○ Not started | 0/? |
-| 8 | Bilingual Book + Vocabulary Page | ○ Not started | 0/? |
+| 7 | Credits API + Dev Environment | ✓ Complete | 1/1 |
+| 8 | Bilingual Book + Vocabulary Page | ◑ In Progress | 1/2 |
 | 9 | Parent Letter + Photo Dedication | ○ Not started | 0/? |
 | 10 | Webhook Order Tracking | ○ Not started | 0/? |
 
@@ -64,6 +64,9 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 - **Phase 05-02:** SVG placeholder images replaced with zlib-generated 512x512 PNG at runtime for Sweetbook photo upload compatibility
 - **Phase 05-02:** Manual test scope limited to dummy data path only (AI generation skipped due to rate limits per D-10)
 
+- **Phase 08-01:** Language union type added as optional fields only — zero regression for Korean mode (existing callers unaffected)
+- **Phase 08-01:** getLanguageInstructions helper isolates prompt branching; bilingual mode adds textEn fallback after JSON parse to prevent null render errors
+
 ## Blockers
 
 (None)
@@ -80,10 +83,11 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 | 03-sweetbook-api-integration | 02 | 30min | 3 | 4 |
 | 05-polish-submission-prep | 01 | 5min | 2 | 3 |
 | 05-polish-submission-prep | 02 | 15min | 2 | 2 |
+| Phase 08-bilingual-book P01 | 3min | 3 tasks | 3 files |
 
 ## Last Session
 
-- **Stopped at:** Completed 05-02-PLAN.md (all phases complete)
+- **Stopped at:** Completed 08-01-PLAN.md
 - **Timestamp:** 2026-04-02T15:15:00Z
 
 ## Accumulated Context
