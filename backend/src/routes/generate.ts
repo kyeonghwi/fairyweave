@@ -150,8 +150,11 @@ router.post('/generate-book', async (req: Request, res: Response) => {
   const language: Language = (rawLanguage && validLanguages.includes(rawLanguage)) ? rawLanguage : 'korean';
   const bookId = generateId();
 
+  // Content images = (totalPages - cover - backCover) / 2 spreads
+  const storyPageCount = Math.floor((pageCount - 2) / 2);
+
   // Return bookId immediately so frontend can start polling
-  progressTracker.start(bookId, pageCount);
+  progressTracker.start(bookId, storyPageCount);
   res.json({ bookId });
 
   // Run pipeline in background

@@ -19,20 +19,28 @@ function sanitize(input: string, maxLen: number): string {
     .trim();
 }
 
+function getAgeBasedTextInstruction(age: number): string {
+  if (age <= 3) return '1-2 very short sentences, using extremely simple vocabulary and repetitive sounds (onomatopoeia/mimetic words)';
+  if (age <= 6) return '2-3 sentences, using engaging words and clear narrative suitable for kindergarteners';
+  if (age <= 9) return '3-5 sentences, adding descriptive adjectives, emotional depth, and cause-and-effect relationships';
+  return '4-6 sentences, with a slightly more complex plot, moral dilemmas, and rich vocabulary (maximum age level 10)';
+}
+
 function getLanguageInstructions(language: Language, childAge: number): string {
+  const textInstruction = getAgeBasedTextInstruction(childAge);
   switch (language) {
     case 'english':
-      return `- text must be in English, written for a ${childAge}-year-old child
+      return `- text must be in English, written for a ${childAge}-year-old child (${textInstruction})
 - "title": string -- the book title in English`;
     case 'bilingual':
       return `- Each page object must have TWO text fields:
-  - "text": Korean story text (2-3 sentences)
-  - "textEn": English story text (2-3 sentences, same meaning as Korean)
+  - "text": Korean story text (${textInstruction})
+  - "textEn": English story text (same length guideline, same meaning as Korean)
 - "title": string -- the book title in Korean
 - Generate BOTH languages for every page simultaneously`;
     case 'korean':
     default:
-      return `- text must be in Korean, written for a ${childAge}-year-old child
+      return `- text must be in Korean, written for a ${childAge}-year-old child (${textInstruction})
 - "title": string -- the book title in Korean`;
   }
 }
@@ -42,15 +50,19 @@ export async function generateStory(req: GenerateStoryRequest): Promise<Generate
   const theme = sanitize(req.theme, 30);
   const moral = sanitize(req.moral, 100);
   const userTitle = req.title ? sanitize(req.title, 50) : '';
-  const pageCount = req.pageCount ?? 16;
+  const totalPages = req.pageCount ?? 16;
   const language: Language = req.language ?? 'korean';
 
+  // Real book: totalPages includes cover + back cover
+  // Inner pages = totalPages - 2, each spread = 1 image page + 1 text page
+  const pageCount = Math.floor((totalPages - 2) / 2);
   const climaxPage = pageCount - 1;
   const bodyEnd = pageCount - 2;
 
+  const titleLang = language === 'english' ? 'English' : 'Korean';
   const titleInstruction = userTitle
     ? `The book title is "${userTitle}". Build the story around this title.`
-    : `Generate a creative, charming Korean book title that fits the story.`;
+    : `Generate a creative, charming ${titleLang} book title that fits the story.`;
 
   const prompt = `You are a professional children's book author and illustrator prompt engineer.
 
@@ -61,9 +73,9 @@ ${titleInstruction}
 
 RULES:
 - Return ONLY a valid JSON object (NOT an array) with these fields:
-  - "title": string — the book title in Korean
+  - "title": string — the book title
   - "coverImagePrompt": string — English image description for the book cover illustration (the main character in a key scene, eye-catching composition)
-  - "pages": array of exactly ${pageCount} objects, each with: "pageNumber" (integer 1-${pageCount}), "text" (Korean story text, 2-3 sentences per page), "imagePrompt" (English image description for illustration)
+  - "pages": array of exactly ${pageCount} objects, each with: "pageNumber" (integer 1-${pageCount}), "text" (story text, length per age guidelines below)${language === 'bilingual' ? ', "textEn" (same story in English, same length)' : ''}, "imagePrompt" (English image description for illustration)
 - Story structure: Page 1 = introduction of ${childName}, Pages 2-${bodyEnd} = adventure with rising tension, Page ${climaxPage} = climax, Page ${pageCount} = resolution reflecting the moral
 - The child ${childName} must be the main character in every scene
 - imagePrompt and coverImagePrompt must describe scenes visually in English (characters, setting, action, mood) — do NOT include style instructions, they will be added automatically
