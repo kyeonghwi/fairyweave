@@ -230,15 +230,25 @@ function handleSweetbookError(err: unknown, res: Response): void {
   }
 }
 
-// GET /api/sweetbook/book-specs — return available book specifications (local data, no API call)
-router.get('/sweetbook/book-specs', (_req: Request, res: Response) => {
-  const specs = Object.entries(BOOK_SPECS).map(([uid, spec]) => ({
-    uid,
-    name: spec.name,
-    minPages: spec.minPages,
-    maxPages: spec.maxPages,
-  }));
-  res.json({ specs });
+// GET /api/sweetbook/book-specs — proxy to Book Print API GET /book-specs
+router.get('/sweetbook/book-specs', async (_req: Request, res: Response) => {
+  try {
+    const client = sweetbookClient as unknown as { _baseUrl: string; _apiKey: string };
+    const baseUrl = client._baseUrl.replace(/\/+$/, '');
+    const resp = await fetch(`${baseUrl}/book-specs`, {
+      headers: { Authorization: `Bearer ${client._apiKey}` },
+    });
+
+    if (!resp.ok) {
+      res.status(resp.status).json({ error: `Book Print API returned ${resp.status}` });
+      return;
+    }
+
+    const body = await resp.json();
+    res.json(body);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
 });
 
 // POST /api/sweetbook/books
