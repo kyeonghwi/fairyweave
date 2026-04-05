@@ -11,11 +11,23 @@ import ThemeChip from '../../components/ThemeChip';
 import ProgressBar from '../../components/ProgressBar';
 import ErrorBanner from '../../components/ErrorBanner';
 
-const BOOK_SPECS = [
-  { uid: 'SQUAREBOOK_HC', label: '정사각 하드커버', desc: '243×248mm · 24~130쪽', emoji: '📕' },
-  { uid: 'PHOTOBOOK_A4_SC', label: 'A4 소프트커버', desc: '210×297mm · 24~130쪽', emoji: '📖' },
-  { uid: 'PHOTOBOOK_A5_SC', label: 'A5 소프트커버', desc: '148×210mm · 50~200쪽', emoji: '📓' },
-] as const;
+const SPEC_EMOJI: Record<string, string> = {
+  SQUAREBOOK_HC: '📕',
+  PHOTOBOOK_A4_SC: '📖',
+  PHOTOBOOK_A5_SC: '📓',
+};
+
+interface BookSpec {
+  bookSpecUid: string;
+  name: string;
+  innerTrimWidthMm: number;
+  innerTrimHeightMm: number;
+  pageMin: number;
+  pageMax: number;
+  coverType: string;
+  priceBase: number;
+  pricePerIncrement: number;
+}
 
 const THEMES = [
   { emoji: '🦕', label: '공룡' },
@@ -42,6 +54,7 @@ export default function CreatePage() {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
 
+  const [bookSpecs, setBookSpecs] = useState<BookSpec[]>([]);
   const [bookSpecUid, setBookSpecUid] = useState('SQUAREBOOK_HC');
   const [pageCount, setPageCount] = useState(16);
   const [bookTitle, setBookTitle] = useState('');
@@ -66,6 +79,18 @@ export default function CreatePage() {
       clearInterval(pollingRef.current);
       pollingRef.current = null;
     }
+  }, []);
+
+  // Fetch book specs from API
+  useEffect(() => {
+    fetch('/api/sweetbook/book-specs')
+      .then((r) => r.json())
+      .then((body) => {
+        const all: BookSpec[] = body.data ?? [];
+        const valid = all.filter((s) => s.name && s.innerTrimWidthMm > 0);
+        if (valid.length > 0) setBookSpecs(valid);
+      })
+      .catch(() => {/* 실패 시 빈 목록 유지 */});
   }, []);
 
   // Cleanup polling on unmount
@@ -215,25 +240,34 @@ export default function CreatePage() {
               {/* 판형 선택 */}
               <FormField label="판형 선택" required>
                 <div className="grid gap-2">
-                  {BOOK_SPECS.map((spec) => (
-                    <button
-                      key={spec.uid}
-                      type="button"
-                      onClick={() => setBookSpecUid(spec.uid)}
-                      className={`flex items-center gap-3 rounded-xl px-4 py-3 border text-left transition-colors
-                        ${bookSpecUid === spec.uid
-                          ? 'border-primary bg-primary-container/20 ring-2 ring-primary/20'
-                          : 'border-outline-variant bg-surface-container-highest hover:border-outline'}`}
-                    >
-                      <span className="text-2xl">{spec.emoji}</span>
-                      <div>
-                        <p className={`text-sm font-medium ${bookSpecUid === spec.uid ? 'text-primary' : 'text-on-surface'}`}>
-                          {spec.label}
-                        </p>
-                        <p className="text-xs text-on-surface-variant">{spec.desc}</p>
-                      </div>
-                    </button>
-                  ))}
+                  {bookSpecs.length === 0 ? (
+                    <p className="text-sm text-on-surface-variant">판형 목록 불러오는 중...</p>
+                  ) : bookSpecs.map((spec) => {
+                    const uid = spec.bookSpecUid;
+                    const desc = `${spec.innerTrimWidthMm}×${spec.innerTrimHeightMm}mm · ${spec.pageMin}~${spec.pageMax}쪽`;
+                    return (
+                      <button
+                        key={uid}
+                        type="button"
+                        onClick={() => {
+                          setBookSpecUid(uid);
+                          setPageCount(Math.min(Math.max(pageCount, spec.pageMin), spec.pageMax));
+                        }}
+                        className={`flex items-center gap-3 rounded-xl px-4 py-3 border text-left transition-colors
+                          ${bookSpecUid === uid
+                            ? 'border-primary bg-primary-container/20 ring-2 ring-primary/20'
+                            : 'border-outline-variant bg-surface-container-highest hover:border-outline'}`}
+                      >
+                        <span className="text-2xl">{SPEC_EMOJI[uid] ?? '📚'}</span>
+                        <div>
+                          <p className={`text-sm font-medium ${bookSpecUid === uid ? 'text-primary' : 'text-on-surface'}`}>
+                            {spec.name}
+                          </p>
+                          <p className="text-xs text-on-surface-variant">{desc}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </FormField>
 
@@ -257,8 +291,8 @@ export default function CreatePage() {
                 <div className="flex items-center gap-4">
                   <input
                     type="range"
-                    min={8}
-                    max={40}
+                    min={bookSpecs.find(s => s.bookSpecUid === bookSpecUid)?.pageMin ?? 8}
+                    max={bookSpecs.find(s => s.bookSpecUid === bookSpecUid)?.pageMax ?? 40}
                     step={2}
                     value={pageCount}
                     onChange={(e) => setPageCount(Number(e.target.value))}

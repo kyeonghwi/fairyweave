@@ -20,6 +20,7 @@ interface BookData {
   theme: string;
   pages: { pageNumber: number; text: string; textEn?: string; imagePrompt: string }[];
   imageUrls: string[];
+  coverImageUrl: string;
   isDummy: boolean;
   language?: string;
 }
@@ -69,6 +70,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
         theme: dummy.theme,
         pages: dummy.pages,
         imageUrls: dummy.imageUrls,
+        coverImageUrl: dummy.coverImageUrl,
         isDummy: true,
         language: 'korean',
       });
@@ -85,6 +87,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
         theme: cached.request?.theme || '',
         pages: cached.pages,
         imageUrls: cached.imageUrls,
+        coverImageUrl: cached.coverImageUrl ?? cached.imageUrls[0],
         isDummy: false,
         language: cached.request?.language ?? 'korean',
       });
@@ -106,6 +109,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
           theme: data.request.theme,
           pages: data.pages,
           imageUrls: data.imageUrls,
+          coverImageUrl: data.coverImageUrl ?? data.imageUrls[0],
           isDummy: false,
           language: data.request?.language ?? 'korean',
         });
@@ -185,7 +189,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
             <div className="w-full max-w-5xl">
               <BookViewer
                 pages={book.pages}
-                imageUrls={book.imageUrls}
+                imageUrls={[book.coverImageUrl, ...book.imageUrls]}
                 currentPage={currentPage}
                 onPageChange={setCurrentPage}
                 bookTitle={book.title}
@@ -247,7 +251,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                 <div className="bg-surface-container-lowest p-6 md:p-8 rounded-lg tonal-shadow flex flex-col md:flex-row gap-8">
                   <div className="w-full md:w-48 h-64 flex-shrink-0 rounded-md overflow-hidden shadow-inner">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={book.imageUrls[0]} alt="표지" className="w-full h-full object-cover" />
+                    <img src={book.coverImageUrl} alt="표지" className="w-full h-full object-cover" />
                   </div>
                   <div className="flex flex-col justify-between">
                     <div>
@@ -378,6 +382,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
             body: JSON.stringify({
               pages: book!.pages,
               imageUrls: book!.imageUrls,
+              coverImageUrl: book!.coverImageUrl,
               request: { childName: book!.childName, age: 5, theme: book!.theme, moral: '' },
               shipping,
             }),
@@ -391,7 +396,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
           });
           if (!bookRes.ok) {
             const data = await bookRes.json().catch(() => ({}));
-            throw new Error(data.error || '책 등록에 실패했어요');
+            throw new Error(data.error ? `${data.error}${data.message ? `: ${data.message}` : ''}` : '책 등록에 실패했어요');
           }
           const { bookUid } = await bookRes.json();
 
@@ -404,7 +409,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
 
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || '주문에 실패했어요');
+          throw new Error(data.error ? `${data.error}${data.message ? `: ${data.message}` : ''}` : '주문에 실패했어요');
         }
 
         const data = await res.json();
@@ -527,7 +532,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                       className="watercolor-gradient text-on-primary px-12 py-5 rounded-xl font-jua text-xl shadow-lg hover:opacity-90 transition-all flex items-center gap-3 active:scale-95 disabled:opacity-70"
                     >
                       {orderLoading ? '주문 처리 중...' : '결제하고 주문 완료하기'}
-                      <span className="material-symbols-outlined">colors_spark</span>
+                      <span className="material-symbols-outlined">auto_awesome</span>
                     </button>
                   </div>
                 </form>
