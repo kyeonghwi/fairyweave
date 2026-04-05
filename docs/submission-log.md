@@ -14,6 +14,7 @@
 | `GET /templates?bookSpecUid=` | 책 사양별 템플릿 UID 동적 조회 (cover/content 템플릿 자동 매칭) | Phase 5 |
 | `GET /orders/:orderUid` | 주문 상태 및 가격 정보 조회 | Phase 5 |
 | `POST /orders/estimate` | 주문 전 크레딧 잔액 검증 | Phase 7 |
+| `GET /book-specs` | 판형 목록 동적 조회 (프론트 폼 판형 선택 UI에 표시, 페이지 범위 동적 반영) | Phase 9 |
 
 ---
 
@@ -55,9 +56,11 @@
 | Claude Code | Phase 6 — 실제 동화책 레이아웃 조사 후 BookViewer 구현: 데스크탑 오픈북 spread(좌=일러스트/우=텍스트), CSS 3D flipForward/flipBackward 페이지 넘김 애니메이션, 모바일 이미지+텍스트 오버레이 뷰 | 2026-04-03 |
 | Claude Code | Phase 6 — 페이지 넘김 애니메이션 버그픽스: back-face 미러링 제거, z-index 타이밍 조정, translateX 방향 수정으로 자연스러운 플립 동작 완성 | 2026-04-03 |
 | Claude Code | Phase 7 — credits 검증 로직 및 book-specs 엔드포인트 구현: POST /orders/estimate 호출로 주문 전 잔액 확인, 부족 시 402 반환, GET /api/sweetbook/book-specs 로컬 엔드포인트 추가 | 2026-04-04 |
+| Claude Code | Phase 9 — GET /book-specs API 연동: 백엔드 book-specs 라우트를 실제 Book Print API 프록시로 교체, 프론트 판형 선택 UI를 API 동적 fetch로 전환, 페이지 범위 슬라이더 판형별 동적 반영 | 2026-04-04 |
 | Claude Code | Phase 8 — Language 유니온 타입 추가, StoryPage.textEn 옵셔널 필드, GenerateStoryRequest.language 옵셔널 필드 (story.ts 타입 확장) | 2026-04-04 |
 | Claude Code | Phase 8 — storyGenerator에 언어별 프롬프트 분기 추가: korean(기존 동일), english(영어 텍스트), bilingual(text=한국어, textEn=영어 동시 생성) | 2026-04-04 |
-| Claude Code | Phase 8 — generate.ts 라우트에서 language 파라미터 추출 및 검증, generateStory 호출 시 전달 (generate-story + generate-book 양쪽) | 2026-04-04 |
+| Claude Code | Phase 8 — generate.ts 라우트에서 language 파라��터 추출 및 검증, generateStory 호출 시 전달 (generate-story + generate-book 양쪽) |
+| Claude Code | Phase 9 — BookSpread 실제 책 레이아웃 구현: 표지(image[0] 전체 너비) → 첫 페이지(text[0] 단일 오른쪽) → 이후 image[i]\|text[i] 펼침 구조로 변경, spreads 매핑 로직 추가, 표지↔단일 전환 시 전체 너비 플립 애니메이션, MobileView도 동일 구조 반영 | 2026-04-05 | 2026-04-04 |
 | Gemini 2.5 Flash | 텍스트 스토리 생성 API 호출 검증 | 2026-04-01 |
 | Gemini 2.5 Flash Image | 이미지 생성 API 호출 검증 (base64 PNG 반환 확인) | 2026-04-01 |
 
