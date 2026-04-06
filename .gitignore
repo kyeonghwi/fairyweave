@@ -9,3 +9,11 @@ frontend/.env.local
 *.env.local
 .next/
 dist/
+
+# AI tooling state
+.bkit/
+.claude/
+.planning/
+.trellis/
+docs/
+bash.exe.stackdump
