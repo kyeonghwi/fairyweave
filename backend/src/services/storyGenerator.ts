@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { GenerateStoryRequest, StoryPage, GenerateStoryResult, Language } from '../types/story';
 
-const STYLE_SEED = "soft watercolor children's book illustration, pastel colors";
+const STYLE_SEED = "soft watercolor children's book illustration, pastel colors, no text no letters no words no numbers";
 
 function getGeminiClient(): GoogleGenerativeAI {
   const apiKey = process.env.GEMINI_API_KEY;
