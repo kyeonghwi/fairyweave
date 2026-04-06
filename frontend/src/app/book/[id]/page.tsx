@@ -40,8 +40,27 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
   const [step, setStep] = useState<Step>('preview');
   const [currentPage, setCurrentPage] = useState(0);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [editSnapshot, setEditSnapshot] = useState<BookData | null>(null);
 
-  const handleToggleEdit = () => setIsEditMode((prev) => !prev);
+  const handleStartEdit = () => {
+    setEditSnapshot(book ? { ...book, pages: book.pages.map((p) => ({ ...p })) } : null);
+    setIsEditMode(true);
+  };
+
+  const handleConfirmEdit = () => {
+    setEditSnapshot(null);
+    setIsEditMode(false);
+  };
+
+  const handleCancelEdit = () => {
+    if (editSnapshot) setBook(editSnapshot);
+    setEditSnapshot(null);
+    setIsEditMode(false);
+  };
+
+  const handleTitleChange = (value: string) => {
+    setBook((prev) => (prev ? { ...prev, title: value } : prev));
+  };
 
   const handleTextChange = (pageIndex: number, field: 'text' | 'textEn', value: string) => {
     setBook((prev) => {
@@ -207,7 +226,10 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                 bookTitle={book.title}
                 language={book.language}
                 isEditMode={isEditMode}
-                onToggleEdit={handleToggleEdit}
+                onStartEdit={handleStartEdit}
+                onConfirmEdit={handleConfirmEdit}
+                onCancelEdit={handleCancelEdit}
+                onTitleChange={handleTitleChange}
                 onTextChange={handleTextChange}
               />
             </div>

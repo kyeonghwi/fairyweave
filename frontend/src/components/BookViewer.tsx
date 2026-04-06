@@ -11,7 +11,10 @@ interface BookViewerProps {
   bookTitle?: string;
   language?: string;
   isEditMode?: boolean;
-  onToggleEdit?: () => void;
+  onStartEdit?: () => void;
+  onConfirmEdit?: () => void;
+  onCancelEdit?: () => void;
+  onTitleChange?: (value: string) => void;
   onTextChange?: (pageIndex: number, field: 'text' | 'textEn', value: string) => void;
 }
 
@@ -264,11 +267,11 @@ export default function BookViewer(props: BookViewerProps) {
   // Edit mode is desktop-only; strip edit props from MobileView
   if (isDesktop) return <BookSpread {...props} />;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { isEditMode, onToggleEdit, onTextChange, ...mobileProps } = props;
+  const { isEditMode, onStartEdit, onConfirmEdit, onCancelEdit, onTitleChange, onTextChange, ...mobileProps } = props;
   return (
     <>
       <MobileView {...mobileProps} />
-      {onToggleEdit && (
+      {onStartEdit && (
         <p className="text-xs text-on-surface-variant text-center mt-3 opacity-70">
           <span className="material-symbols-outlined text-sm align-middle mr-0.5">desktop_windows</span>
           글 수정은 PC에서 이용해 주세요

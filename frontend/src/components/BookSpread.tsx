@@ -11,7 +11,10 @@ interface BookSpreadProps {
   bookTitle?: string;
   language?: string;
   isEditMode?: boolean;
-  onToggleEdit?: () => void;
+  onStartEdit?: () => void;
+  onConfirmEdit?: () => void;
+  onCancelEdit?: () => void;
+  onTitleChange?: (value: string) => void;
   onTextChange?: (pageIndex: number, field: 'text' | 'textEn', value: string) => void;
 }
 
@@ -44,7 +47,10 @@ export default function BookSpread({
   bookTitle,
   language,
   isEditMode,
-  onToggleEdit,
+  onStartEdit,
+  onConfirmEdit,
+  onCancelEdit,
+  onTitleChange,
   onTextChange,
 }: BookSpreadProps) {
   const spreads = useMemo(() => buildSpreads(pages.length), [pages.length]);
@@ -206,7 +212,7 @@ export default function BookSpread({
         }}
       >
         {isCover ? (
-          /* ── Cover: full-width image ── */
+          /* ── Cover: full-width image with title overlay ── */
           <div className="absolute inset-0">
             <BookPage
               type="image"
@@ -214,6 +220,26 @@ export default function BookSpread({
               pageNumber={0}
               side="left"
             />
+            {bookTitle && (
+              <div className="absolute inset-x-0 bottom-0 flex items-end justify-center pb-8 px-6">
+                {isEditMode && onTitleChange ? (
+                  <input
+                    type="text"
+                    value={bookTitle}
+                    onChange={(e) => onTitleChange(e.target.value)}
+                    className="font-jua text-white text-center leading-snug bg-black/40 border border-white/60 rounded-lg px-3 py-1 w-full max-w-sm outline-none focus:border-white placeholder-white/50"
+                    style={{ fontSize: 'clamp(18px, 3.5vw, 36px)', textShadow: '0 2px 8px rgba(0,0,0,0.7)' }}
+                  />
+                ) : (
+                  <p
+                    className="font-jua text-white text-center leading-snug pointer-events-none word-break-keep"
+                    style={{ fontSize: 'clamp(18px, 3.5vw, 36px)', textShadow: '0 2px 8px rgba(0,0,0,0.7)' }}
+                  >
+                    {bookTitle}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         ) : isBackcover ? (
           /* ── Back cover: single full-width page ── */
@@ -526,21 +552,32 @@ export default function BookSpread({
       </div>
 
       {/* Edit toggle */}
-      {onToggleEdit && (
+      {isEditMode ? (
+        <div className="mt-3 flex items-center gap-2">
+          <button
+            onClick={onCancelEdit}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-surface-container-lowest text-on-surface-variant tonal-shadow hover:bg-surface-container-low transition-all"
+          >
+            <span className="material-symbols-outlined text-base">close</span>
+            취소
+          </button>
+          <button
+            onClick={onConfirmEdit}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-on-primary shadow-sm hover:opacity-90 transition-all"
+          >
+            <span className="material-symbols-outlined text-base">check</span>
+            완료
+          </button>
+        </div>
+      ) : onStartEdit ? (
         <button
-          onClick={onToggleEdit}
-          className={`mt-3 flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-            isEditMode
-              ? 'bg-primary text-on-primary shadow-sm'
-              : 'bg-surface-container-lowest text-on-surface-variant tonal-shadow hover:bg-surface-container-low'
-          }`}
+          onClick={onStartEdit}
+          className="mt-3 flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-surface-container-lowest text-on-surface-variant tonal-shadow hover:bg-surface-container-low transition-all"
         >
-          <span className="material-symbols-outlined text-base">
-            {isEditMode ? 'check' : 'edit'}
-          </span>
-          {isEditMode ? '수정 완료' : '글 수정하기'}
+          <span className="material-symbols-outlined text-base">edit</span>
+          글 수정하기
         </button>
-      )}
+      ) : null}
 
       {/* Page counter */}
       <p className="text-xs text-on-surface-variant opacity-50 mt-2">
