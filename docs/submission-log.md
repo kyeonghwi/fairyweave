@@ -15,6 +15,18 @@
 | `GET /orders/:orderUid` | 주문 상태 및 가격 정보 조회 | Phase 5 |
 | `POST /orders/estimate` | 주문 전 크레딧 잔액 검증 | Phase 7 |
 | `GET /book-specs` | 판형 목록 동적 조회 (프론트 폼 판형 선택 UI에 표시, 페이지 범위 동적 반영) | Phase 9 |
+| `GET /orders` | 주문 목록 조회 (limit/offset 페이지네이션) | Phase 10 |
+| `POST /orders/{orderUid}/cancel` | 주문 취소 (PAID/PDF_READY 상태만 가능, cancelReason 필수) | Phase 10 |
+| `GET /templates` | 템플릿 목록 조회 (bookSpecUid/templateKind/category 필터링) | Phase 10 |
+| `GET /credits` | 충전금 잔액 조회 | Phase 10 |
+| `GET /credits/transactions` | 충전금 거래 내역 조회 (limit/offset 페이지네이션) | Phase 10 |
+| `GET /book-specs/{specUid}` | 판형 상세 조회 (가격 정보 priceBase/pricePerIncrement 포함) | Phase 10 |
+| `GET /books` | 책 목록 조회 (status/limit/offset 필터) | Phase 10 |
+| `GET /books/{bookUid}` | 책 상태 조회 (pageCount, status, createdAt 포함) | Phase 10 |
+| `PATCH /orders/{orderUid}/shipping` | 배송지 수정 (PAID/PDF_READY 상태에서 가능) | Phase 10 |
+| `GET /templates/{templateUid}` | 템플릿 상세 조회 (파라미터 정의, 레이아웃, 썸네일) | Phase 10 |
+| `PUT /webhooks/config` | Webhook URL 등록 (5개 이벤트 구독) | Phase 10 |
+| `GET /webhooks/config` | 현재 webhook 설정 조회 | Phase 10 |
 
 ---
 
@@ -63,6 +75,12 @@
 | Claude Code | Phase 9 — BookSpread 실제 책 레이아웃 구현: 표지(image[0] 전체 너비) → 첫 페이지(text[0] 단일 오른쪽) → 이후 image[i]\|text[i] 펼침 구조로 변경, spreads 매핑 로직 추가, 표지↔단일 전환 시 전체 너비 플립 애니메이션, MobileView도 동일 구조 반영 | 2026-04-05 | 2026-04-04 |
 | Gemini 2.5 Flash | 텍스트 스토리 생성 API 호출 검증 | 2026-04-01 |
 | Gemini 2.5 Flash Image | 이미지 생성 API 호출 검증 (base64 PNG 반환 확인) | 2026-04-01 |
+| Gemini 2.5 Flash | 아이디어 회의: 서비스 컨셉, 기능 범위, UX 플로우 브레인스토밍 | 2026-04-01 |
+| Gemini 2.5 Flash | 더미 데이터 생성: 5권 × 16페이지 스토리 텍스트 및 이미지 프롬프트 생성 | 2026-04-02 |
+| Stitch (v0) | UI 생성: 프론트엔드 페이지 레이아웃 및 컴포넌트 디자인 초안 생성 | 2026-04-02 |
+| Claude Code | Phase 10 — 인라인 텍스트 수정 기능: BookPage에 textarea 조건부 렌더링, BookSpread에 편집 토글 버튼, 수정된 텍스트가 books-from-data 엔드포인트를 통해 인쇄에 반영되도록 AI 책 주문 경로 통합 | 2026-04-06 |
+| Claude Code | Phase 10 — Sweetbook API 전체 엔드포인트 지원: GET /orders(목록), POST /orders/:uid/cancel(취소), GET /templates(템플릿 목록), GET /credits/balance(잔액), GET /credits/transactions(거래내역) 5개 프록시 추가 | 2026-04-06 |
+| Claude Code | Phase 10 — Sweetbook API 확장 2차: GET /book-specs/:specUid(판형 상세+가격), GET/POST /books(목록/상태), PATCH /orders/:uid/shipping(배송지 수정), GET /templates/:uid(상세), Webhook 연동(POST 수신+HMAC 검증+이벤트 추적+설정 관리) | 2026-04-06 |
 
 ---
 
@@ -75,7 +93,10 @@
 AI 생성 비용은 권당 수십 원이지만 실물 동화책의 감성 가치는 수만 원입니다. 형제, 생일, 기념일마다 반복 주문이 발생하는 구조로 LTV가 높습니다.
 
 ### 시간이 더 있었다면 추가했을 기능
-Gemini 레퍼런스 이미지로 캐릭터 일관성 강화, 부모가 스토리를 직접 편집하는 co-creation 기능, Sweetbook Webhook으로 주문 상태 실시간 추적.
+Gemini 레퍼런스 이미지로 캐릭터 일관성 강화, Sweetbook Webhook으로 주문 상태 실시간 추적, 모바일 인라인 편집 지원.
+
+### 구현 완료한 추가 기능
+부모가 AI 생성 텍스트를 직접 수정하는 인라인 편집(co-creation) 기능. 환불 방지(AI 환각/어색한 문장 사전 검수)와 이케아 효과(부모 참여로 소유감 강화)를 동시에 달성.
 
 ---
 
