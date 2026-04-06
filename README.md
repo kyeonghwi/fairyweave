@@ -42,7 +42,7 @@ npm run dev
 | `PUT /books/:bookUid/cover` (covers.create) | 표지 템플릿 적용 |
 | `PUT /books/:bookUid/contents` (contents.insert) | 본문 배치 |
 | `POST /books/:bookUid/finalize` (books.finalize) | 책 확정 (편집 잠금) |
-| `POST /orders` | 주문 생성 (Idempotency-Key 포함) |
+| `POST /orders` | 주문 생성 |
 | `GET /book-specs` | 판형 목록 동적 조회 |
 | `GET /templates?bookSpecUid=` | 사양별 템플릿 UID 동적 조회 |
 | `GET /orders/:orderUid` | 주문 상태 및 가격 조회 |
