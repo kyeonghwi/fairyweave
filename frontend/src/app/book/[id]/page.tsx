@@ -39,6 +39,18 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
   const [loadError, setLoadError] = useState('');
   const [step, setStep] = useState<Step>('preview');
   const [currentPage, setCurrentPage] = useState(0);
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  const handleToggleEdit = () => setIsEditMode((prev) => !prev);
+
+  const handleTextChange = (pageIndex: number, field: 'text' | 'textEn', value: string) => {
+    setBook((prev) => {
+      if (!prev) return prev;
+      const pages = [...prev.pages];
+      pages[pageIndex] = { ...pages[pageIndex], [field]: value };
+      return { ...prev, pages };
+    });
+  };
 
   // Order form
   const [recipientName, setRecipientName] = useState('');
@@ -194,6 +206,9 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                 onPageChange={setCurrentPage}
                 bookTitle={book.title}
                 language={book.language}
+                isEditMode={isEditMode}
+                onToggleEdit={handleToggleEdit}
+                onTextChange={handleTextChange}
               />
             </div>
 
@@ -372,40 +387,18 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
           ...(shippingMemo.trim() ? { shippingMemo: shippingMemo.trim() } : {}),
         };
 
-        let res: Response;
-
-        if (book!.isDummy) {
-          // Dummy book: use books-from-data endpoint
-          res = await fetch('/api/sweetbook/books-from-data', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              pages: book!.pages,
-              imageUrls: book!.imageUrls,
-              coverImageUrl: book!.coverImageUrl,
-              request: { childName: book!.childName, age: 5, theme: book!.theme, moral: '' },
-              shipping,
-            }),
-          });
-        } else {
-          // AI book: create via bookId, then order
-          const bookRes = await fetch('/api/sweetbook/books', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ bookId: book!.id }),
-          });
-          if (!bookRes.ok) {
-            const data = await bookRes.json().catch(() => ({}));
-            throw new Error(data.error ? `${data.error}${data.message ? `: ${data.message}` : ''}` : '책 등록에 실패했어요');
-          }
-          const { bookUid } = await bookRes.json();
-
-          res = await fetch('/api/sweetbook/orders', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ bookUid, ...shipping }),
-          });
-        }
+        // Use books-from-data for all orders (dummy + AI) so edited text flows to print
+        const res = await fetch('/api/sweetbook/books-from-data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pages: book!.pages,
+            imageUrls: book!.imageUrls,
+            coverImageUrl: book!.coverImageUrl,
+            request: { childName: book!.childName, age: 5, theme: book!.theme, moral: '' },
+            shipping,
+          }),
+        });
 
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));

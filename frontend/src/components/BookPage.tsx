@@ -22,9 +22,12 @@ interface BookPageProps {
   pageNumber?: number;
   side: 'left' | 'right';
   bookTitle?: string;
+  isEditMode?: boolean;
+  onTextChange?: (value: string) => void;
+  onTextEnChange?: (value: string) => void;
 }
 
-export default function BookPage({ type, imageUrl, text, textEn, language, pageNumber, side, bookTitle }: BookPageProps) {
+export default function BookPage({ type, imageUrl, text, textEn, language, pageNumber, side, bookTitle, isEditMode, onTextChange, onTextEnChange }: BookPageProps) {
   if (type === 'backcover') {
     return (
       <div
@@ -157,26 +160,57 @@ export default function BookPage({ type, imageUrl, text, textEn, language, pageN
         {isBilingual ? (
           <>
             {/* English text - top half */}
-            <div className="flex-1 flex flex-col justify-center">
-              <p
-                className="text-on-surface leading-relaxed text-center"
-                style={{ fontSize, fontFamily: 'system-ui, sans-serif' }}
-              >
-                {textEn}
-              </p>
+            <div className="flex-1 flex flex-col justify-center relative">
+              {isEditMode ? (
+                <textarea
+                  value={textEn ?? ''}
+                  onChange={(e) => onTextEnChange?.(e.target.value)}
+                  maxLength={400}
+                  aria-label="English text editing"
+                  className="w-full flex-1 resize-none bg-transparent outline-none text-on-surface leading-relaxed text-center rounded-md border-2 border-dashed border-primary/30 focus:border-primary/60 transition-colors px-2 py-1"
+                  style={{ fontSize, fontFamily: 'system-ui, sans-serif' }}
+                />
+              ) : (
+                <p
+                  className="text-on-surface leading-relaxed text-center"
+                  style={{ fontSize, fontFamily: 'system-ui, sans-serif' }}
+                >
+                  {textEn}
+                </p>
+              )}
             </div>
             {/* Divider */}
             <div className="border-t border-outline-variant/30 my-2" />
             {/* Korean text - bottom half */}
-            <div className="flex-1 flex flex-col justify-center">
-              <p
-                className="font-jua text-on-surface leading-relaxed text-center word-break-keep"
-                style={{ fontSize }}
-              >
-                {text}
-              </p>
+            <div className="flex-1 flex flex-col justify-center relative">
+              {isEditMode ? (
+                <textarea
+                  value={text ?? ''}
+                  onChange={(e) => onTextChange?.(e.target.value)}
+                  maxLength={400}
+                  aria-label="한국어 텍스트 편집"
+                  className="w-full flex-1 resize-none bg-transparent outline-none font-jua text-on-surface leading-relaxed text-center word-break-keep rounded-md border-2 border-dashed border-primary/30 focus:border-primary/60 transition-colors px-2 py-1"
+                  style={{ fontSize }}
+                />
+              ) : (
+                <p
+                  className="font-jua text-on-surface leading-relaxed text-center word-break-keep"
+                  style={{ fontSize }}
+                >
+                  {text}
+                </p>
+              )}
             </div>
           </>
+        ) : isEditMode ? (
+          <textarea
+            value={text ?? ''}
+            onChange={(e) => onTextChange?.(e.target.value)}
+            maxLength={400}
+            aria-label="텍스트 편집"
+            className="w-full flex-1 resize-none bg-transparent outline-none font-jua text-on-surface leading-relaxed text-center word-break-keep rounded-md border-2 border-dashed border-primary/30 focus:border-primary/60 transition-colors px-2 py-1"
+            style={{ fontSize }}
+          />
         ) : (
           <p
             className="font-jua text-on-surface leading-relaxed text-center word-break-keep"

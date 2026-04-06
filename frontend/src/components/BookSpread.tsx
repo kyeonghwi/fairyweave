@@ -10,6 +10,9 @@ interface BookSpreadProps {
   onPageChange: (page: number) => void;
   bookTitle?: string;
   language?: string;
+  isEditMode?: boolean;
+  onToggleEdit?: () => void;
+  onTextChange?: (pageIndex: number, field: 'text' | 'textEn', value: string) => void;
 }
 
 type FlipDir = 'forward' | 'backward';
@@ -40,6 +43,9 @@ export default function BookSpread({
   onPageChange,
   bookTitle,
   language,
+  isEditMode,
+  onToggleEdit,
+  onTextChange,
 }: BookSpreadProps) {
   const spreads = useMemo(() => buildSpreads(pages.length), [pages.length]);
   const totalSpreads = spreads.length;
@@ -80,6 +86,7 @@ export default function BookSpread({
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement) return;
       if (e.key === 'ArrowLeft') goPrev();
       if (e.key === 'ArrowRight') goNext();
     };
@@ -124,6 +131,9 @@ export default function BookSpread({
         language={language}
         pageNumber={leftNum + 1}
         side="right"
+        isEditMode={isEditMode && !isFlipping}
+        onTextChange={(value) => onTextChange?.(spread.textIndex, 'text', value)}
+        onTextEnChange={(value) => onTextChange?.(spread.textIndex, 'textEn', value)}
       />
     );
   }
@@ -465,7 +475,7 @@ export default function BookSpread({
       </div>
 
       {/* Navigation bar */}
-      <div className="flex items-center gap-6 mt-5">
+      <div className="flex items-center gap-6 mt-5 relative">
         <button
           onClick={goPrev}
           disabled={displayedSpread === 0 || isFlipping}
@@ -514,6 +524,23 @@ export default function BookSpread({
           <span className="material-symbols-outlined">chevron_right</span>
         </button>
       </div>
+
+      {/* Edit toggle */}
+      {onToggleEdit && (
+        <button
+          onClick={onToggleEdit}
+          className={`mt-3 flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            isEditMode
+              ? 'bg-primary text-on-primary shadow-sm'
+              : 'bg-surface-container-lowest text-on-surface-variant tonal-shadow hover:bg-surface-container-low'
+          }`}
+        >
+          <span className="material-symbols-outlined text-base">
+            {isEditMode ? 'check' : 'edit'}
+          </span>
+          {isEditMode ? '수정 완료' : '글 수정하기'}
+        </button>
+      )}
 
       {/* Page counter */}
       <p className="text-xs text-on-surface-variant opacity-50 mt-2">
