@@ -12,7 +12,7 @@
 - SQLite 영속 저장 — 서버 재시작 후에도 생성된 책 보존 (better-sqlite3, WAL 모드)
 - 한국어/영어/이중언어 동화 생성 지원
 - Sweetbook Print API 연동 실물 책 주문 (주문 가격 실시간 표시)
-- Sweetbook Webhook 수신 — 주문 상태 변경 이벤트 HMAC 검증 + 추적
+- 운영 대시보드 (`/dashboard`) — 주문 관리(취소/배송지 수정), 크레딧 잔액/내역 (데스크탑 전용)
 - 더미 데이터 5권으로 즉시 체험 가능 (커버 이미지 포함)
 
 ## 실행 방법
@@ -51,15 +51,21 @@ npm run dev
 | `POST /orders/:orderUid/cancel` | 주문 취소 | Phase 10 |
 | `GET /credits` | 충전금 잔액 조회 | Phase 10 |
 | `GET /credits/transactions` | 충전금 거래 내역 조회 | Phase 10 |
-| `PUT /webhooks/config` | Webhook URL 등록 | Phase 10 |
+| `GET /book-specs/:specUid` | 판형 상세 조회 (가격 정보 포함) | Phase 10 |
+| `GET /books` | 책 목록 조회 (status/limit/offset 필터) | Phase 10 |
+| `GET /books/:bookUid` | 책 상태 조회 (pageCount, status, createdAt) | Phase 10 |
+| `PATCH /orders/:orderUid/shipping` | 배송지 수정 (PAID/PDF_READY 상태에서 가능) | Phase 10 |
+| `GET /templates/:templateUid` | 템플릿 상세 조회 (파라미터 정의, 레이아웃, 썸네일) | Phase 10 |
 
 ## AI 도구 활용 내역
 
 | AI 도구 | 활용 내용 |
 |---------|----------|
 | Claude Code (Anthropic) | 프로젝트 전체 구현: 모노레포 설정, 백엔드 API, 프론트엔드 UI, Sweetbook 연동, 테스트 |
-| Gemini 2.5 Flash (Google) | 동화 스토리 텍스트 생성 (메타-프롬프트 + JSON 출력, 페이지 수 동적) |
-| Gemini 2.5 Flash Image (Google) | 페이지별 삽화 이미지 생성 (base64 PNG) |
+| Gemini 3.1 Pro | 서비스 컨셉, 기능 범위, UX 플로우 아이디어 회의 |
+| Gemini 2.5 Flash | 동화 스토리 텍스트 생성 (메타-프롬프트 + JSON 출력, 페이지 수 동적) |
+| Gemini 2.5 Flash Image | 페이지별 삽화 이미지 생성 (base64 PNG) |
+| Stitch | 프론트엔드 페이지 레이아웃 및 컴포넌트 디자인 초안 생성 |
 
 ## 설계 의도
 
@@ -76,12 +82,11 @@ Idempotency-Key를 주문 API에 적용하여 네트워크 오류 시 중복 주
 **구현 완료한 추가 기능**
 
 - 부모가 AI 생성 텍스트를 직접 수정하는 인라인 편집(co-creation) 기능
-- Sweetbook Webhook 수신 + HMAC 서명 검증 + 주문 상태 이벤트 추적
 
 **더 시간이 있었다면 추가했을 기능**
 
 - Gemini 레퍼런스 이미지 기반 캐릭터 일관성 강화 (매 페이지 같은 주인공 얼굴)
-- Webhook 기반 주문 상태 실시간 알림 UI (현재 서버 수신만 구현)
+- 주문 상태 실시간 알림 UI
 
 ## 기술 스택
 
