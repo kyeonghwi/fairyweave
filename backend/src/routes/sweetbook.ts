@@ -251,6 +251,52 @@ router.get('/sweetbook/book-specs', async (_req: Request, res: Response) => {
   }
 });
 
+// GET /api/sweetbook/book-specs/:specUid — proxy to Book Print API GET /book-specs/{specUid}
+router.get('/sweetbook/book-specs/:specUid', async (req: Request, res: Response) => {
+  try {
+    const client = sweetbookClient as unknown as { _baseUrl: string; _apiKey: string };
+    const baseUrl = client._baseUrl.replace(/\/+$/, '');
+    const resp = await fetch(`${baseUrl}/book-specs/${req.params.specUid}`, {
+      headers: { Authorization: `Bearer ${client._apiKey}` },
+    });
+
+    if (!resp.ok) {
+      res.status(resp.status).json({ error: `Book Print API returned ${resp.status}` });
+      return;
+    }
+
+    res.json(await resp.json());
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+// GET /api/sweetbook/books — list all books (must be before :bookUid route)
+router.get('/sweetbook/books', async (req: Request, res: Response) => {
+  const { status, limit, offset } = req.query as { status?: string; limit?: string; offset?: string };
+
+  try {
+    const result = await sweetbookClient.books.list({
+      status,
+      limit: limit ? Number(limit) : 20,
+      offset: offset ? Number(offset) : 0,
+    });
+    res.json(result);
+  } catch (err: unknown) {
+    handleSweetbookError(err, res);
+  }
+});
+
+// GET /api/sweetbook/books/:bookUid — query book status
+router.get('/sweetbook/books/:bookUid', async (req: Request, res: Response) => {
+  try {
+    const result = await sweetbookClient.books.get(req.params.bookUid);
+    res.json(result);
+  } catch (err: unknown) {
+    handleSweetbookError(err, res);
+  }
+});
+
 // POST /api/sweetbook/books
 // Body: { bookId: string }
 // Response: { bookUid: string }
@@ -417,6 +463,22 @@ router.post('/sweetbook/books-from-data', async (req: Request, res: Response) =>
   }
 });
 
+// GET /api/sweetbook/orders — list all orders (must be before :orderUid route)
+router.get('/sweetbook/orders', async (req: Request, res: Response) => {
+  const { limit, offset } = req.query as { limit?: string; offset?: string };
+
+  try {
+    const result = await sweetbookClient.orders.list({
+      limit: limit ? Number(limit) : 20,
+      offset: offset ? Number(offset) : 0,
+    });
+    res.json(result);
+  } catch (err: unknown) {
+    console.error('[/api/sweetbook/orders] Error:', err);
+    handleSweetbookError(err, res);
+  }
+});
+
 // GET /api/sweetbook/orders/:orderUid — query order status
 router.get('/sweetbook/orders/:orderUid', async (req: Request, res: Response) => {
   const { orderUid } = req.params;
@@ -442,6 +504,132 @@ router.get('/sweetbook/orders/:orderUid', async (req: Request, res: Response) =>
     });
   } catch (err: unknown) {
     console.error(`[/api/sweetbook/orders/${orderUid}] Error:`, err);
+    handleSweetbookError(err, res);
+  }
+});
+
+// POST /api/sweetbook/orders/:orderUid/cancel — cancel an order
+router.post('/sweetbook/orders/:orderUid/cancel', async (req: Request, res: Response) => {
+  const { orderUid } = req.params;
+  const { cancelReason } = req.body as { cancelReason?: string };
+
+  if (!cancelReason) {
+    res.status(400).json({ error: 'cancelReason is required (max 500 characters)' });
+    return;
+  }
+
+  try {
+    const result = await sweetbookClient.orders.cancel(orderUid, cancelReason);
+    res.json(result);
+  } catch (err: unknown) {
+    console.error(`[/api/sweetbook/orders/${orderUid}/cancel] Error:`, err);
+    handleSweetbookError(err, res);
+  }
+});
+
+// PATCH /api/sweetbook/orders/:orderUid/shipping — update shipping address
+router.patch('/sweetbook/orders/:orderUid/shipping', async (req: Request, res: Response) => {
+  const { orderUid } = req.params;
+  const { recipientName, recipientPhone, postalCode, address1, address2 } = req.body as {
+    recipientName?: string;
+    recipientPhone?: string;
+    postalCode?: string;
+    address1?: string;
+    address2?: string;
+  };
+
+  if (!recipientName && !recipientPhone && !postalCode && !address1) {
+    res.status(400).json({ error: 'At least one shipping field is required' });
+    return;
+  }
+
+  try {
+    const result = await sweetbookClient.orders.updateShipping(orderUid, {
+      ...(recipientName ? { recipientName } : {}),
+      ...(recipientPhone ? { recipientPhone } : {}),
+      ...(postalCode ? { postalCode } : {}),
+      ...(address1 ? { address1 } : {}),
+      ...(address2 !== undefined ? { address2 } : {}),
+    });
+    res.json(result);
+  } catch (err: unknown) {
+    console.error(`[/api/sweetbook/orders/${orderUid}/shipping] Error:`, err);
+    handleSweetbookError(err, res);
+  }
+});
+
+// GET /api/sweetbook/templates — list templates (optionally filtered by bookSpecUid / templateKind)
+router.get('/sweetbook/templates', async (req: Request, res: Response) => {
+  try {
+    const client = sweetbookClient as unknown as { _baseUrl: string; _apiKey: string };
+    const baseUrl = client._baseUrl.replace(/\/+$/, '');
+    const params = new URLSearchParams();
+    const { bookSpecUid, templateKind, category, limit, offset } = req.query as Record<string, string | undefined>;
+    if (bookSpecUid) params.set('bookSpecUid', bookSpecUid);
+    if (templateKind) params.set('templateKind', templateKind);
+    if (category) params.set('category', category);
+    if (limit) params.set('limit', limit);
+    if (offset) params.set('offset', offset);
+
+    const url = `${baseUrl}/templates${params.toString() ? `?${params}` : ''}`;
+    const resp = await fetch(url, {
+      headers: { Authorization: `Bearer ${client._apiKey}` },
+    });
+
+    if (!resp.ok) {
+      res.status(resp.status).json({ error: `Book Print API returned ${resp.status}` });
+      return;
+    }
+
+    res.json(await resp.json());
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+// GET /api/sweetbook/templates/:templateUid — get template details
+router.get('/sweetbook/templates/:templateUid', async (req: Request, res: Response) => {
+  try {
+    const client = sweetbookClient as unknown as { _baseUrl: string; _apiKey: string };
+    const baseUrl = client._baseUrl.replace(/\/+$/, '');
+    const resp = await fetch(`${baseUrl}/templates/${req.params.templateUid}`, {
+      headers: { Authorization: `Bearer ${client._apiKey}` },
+    });
+
+    if (!resp.ok) {
+      res.status(resp.status).json({ error: `Book Print API returned ${resp.status}` });
+      return;
+    }
+
+    res.json(await resp.json());
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+// GET /api/sweetbook/credits/balance — query credit balance
+router.get('/sweetbook/credits/balance', async (_req: Request, res: Response) => {
+  try {
+    const result = await sweetbookClient.credits.getBalance();
+    res.json(result);
+  } catch (err: unknown) {
+    console.error('[/api/sweetbook/credits/balance] Error:', err);
+    handleSweetbookError(err, res);
+  }
+});
+
+// GET /api/sweetbook/credits/transactions — query credit transaction history
+router.get('/sweetbook/credits/transactions', async (req: Request, res: Response) => {
+  const { limit, offset } = req.query as { limit?: string; offset?: string };
+
+  try {
+    const result = await sweetbookClient.credits.transactions({
+      limit: limit ? Number(limit) : 20,
+      offset: offset ? Number(offset) : 0,
+    });
+    res.json(result);
+  } catch (err: unknown) {
+    console.error('[/api/sweetbook/credits/transactions] Error:', err);
     handleSweetbookError(err, res);
   }
 });

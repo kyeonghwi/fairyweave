@@ -1,7 +1,13 @@
 // Local type declarations for bookprintapi-nodejs-sdk (no .d.ts in SDK)
-// Covers only the methods used by FairyWeave Phase 3
 
 declare module 'bookprintapi-nodejs-sdk' {
+  export function verifySignature(
+    payload: string,
+    signature: string,
+    secret: string,
+    timestamp?: string,
+    tolerance?: number,
+  ): boolean;
   export interface SweetbookClientOptions {
     apiKey: string;
     environment?: 'sandbox' | 'live';
@@ -101,6 +107,8 @@ declare module 'bookprintapi-nodejs-sdk' {
     constructor(options: SweetbookClientOptions);
     books: {
       create(params: BookCreateParams): Promise<BookResult>;
+      get(bookUid: string): Promise<Record<string, unknown>>;
+      list(params?: { status?: string; limit?: number; offset?: number }): Promise<Record<string, unknown>>;
       finalize(bookUid: string): Promise<unknown>;
       delete(bookUid: string): Promise<unknown>;
     };
@@ -116,9 +124,14 @@ declare module 'bookprintapi-nodejs-sdk' {
     orders: {
       create(params: OrderCreateParams): Promise<OrderResult>;
       get(orderUid: string): Promise<OrderResult>;
+      list(params?: { limit?: number; offset?: number; status?: string; from?: string; to?: string }): Promise<Record<string, unknown>>;
       estimate(params: OrderEstimateParams): Promise<OrderEstimateResult>;
+      cancel(orderUid: string, cancelReason: string): Promise<Record<string, unknown>>;
+      updateShipping(orderUid: string, shippingData: Record<string, unknown>): Promise<Record<string, unknown>>;
     };
     credits: {
+      getBalance(): Promise<Record<string, unknown>>;
+      transactions(params?: { limit?: number; offset?: number; from?: string; to?: string }): Promise<Record<string, unknown>>;
       sandboxCharge(amount: number, description: string): Promise<unknown>;
     };
   }
