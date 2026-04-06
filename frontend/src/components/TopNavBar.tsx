@@ -9,10 +9,10 @@ export default function TopNavBar() {
         </Link>
         <div className="hidden md:flex items-center gap-8">
           <Link
-            href="/"
+            href="/dashboard"
             className="font-jua text-lg tracking-tight text-secondary hover:text-primary transition-colors"
           >
-            내 서재
+            대시보드
           </Link>
           <Link
             href="/create"
