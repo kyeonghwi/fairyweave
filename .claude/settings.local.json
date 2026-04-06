@@ -103,7 +103,12 @@
       "Bash(cp \"C:/Users/khp.PKH/AppData/Local/Temp/MicrosoftEdgeDownloads/a1f28ba6-5f12-4189-ab80-cef51c77527c/Generated Image April 05, 2026 - 5_56PM.jpg\" \"D:/Fairyweave/frontend/public/images/cloud-cover.jpg\")",
       "Bash(cp \"C:/Users/khp.PKH/AppData/Local/Temp/MicrosoftEdgeDownloads/377c4b69-080e-4b0e-a4f5-bce5a8e3c55d/Generated Image April 05, 2026 - 5_57PM.jpg\" \"D:/Fairyweave/frontend/public/images/ocean-cover.jpg\")",
       "Bash(cp \"C:/Users/khp.PKH/AppData/Local/Temp/MicrosoftEdgeDownloads/7f82a624-5544-4f25-b470-41d0d8d009ee/Generated Image April 05, 2026 - 5_57PM.jpg\" \"D:/Fairyweave/frontend/public/images/garden-cover.jpg\")",
-      "Bash(git diff:*)"
+      "Bash(git diff:*)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d, ensure_ascii=False\\)\\)\")",
+      "Bash(python -c ':*)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d, ensure_ascii=False, indent=2\\)\\)\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(f'잔액: {d[\\\\\"balance\\\\\"]:,}원 \\({d[\\\\\"env\\\\\"]}\\)'\\)\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d['balance']\\)\")"
     ]
   }
 }
