@@ -64,6 +64,9 @@ export async function generateStory(req: GenerateStoryRequest): Promise<Generate
     ? `The book title is "${userTitle}". Build the story around this title.`
     : `Generate a creative, charming ${titleLang} book title that fits the story.`;
 
+  const halfPages = Math.ceil(pageCount / 2);
+  const behindPages = Array.from({ length: Math.floor(pageCount / 3) }, (_, i) => i * 3 + 2).slice(0, 2);
+
   const prompt = `You are a professional children's book author and illustrator prompt engineer.
 
 Create a ${pageCount}-page children's storybook for a child named "${childName}" (age ${req.age}).
@@ -74,11 +77,13 @@ ${titleInstruction}
 RULES:
 - Return ONLY a valid JSON object (NOT an array) with these fields:
   - "title": string — the book title
-  - "coverImagePrompt": string — English image description for the book cover illustration (the main character in a key scene, eye-catching composition)
-  - "pages": array of exactly ${pageCount} objects, each with: "pageNumber" (integer 1-${pageCount}), "text" (story text, length per age guidelines below)${language === 'bilingual' ? ', "textEn" (same story in English, same length)' : ''}, "imagePrompt" (English image description for illustration)
+  - "characterDescription": string — a SINGLE compact English sentence describing ${childName}'s fixed appearance: age, hair (color + style), eye color, skin tone, and 1-2 distinctive accessories or clothing items that will appear in EVERY illustration (e.g. "A 5-year-old Asian girl with short black bob hair, bright round red glasses, wearing a yellow polka-dot dress with white collar"). This must be vivid enough to anchor visual consistency across all pages.
+  - "coverImagePrompt": string — English image description for the book cover illustration (the main character in a key scene, eye-catching composition). Do NOT repeat characterDescription here; it will be prepended automatically.
+  - "pages": array of exactly ${pageCount} objects, each with: "pageNumber" (integer 1-${pageCount}), "text" (story text, length per age guidelines below)${language === 'bilingual' ? ', "textEn" (same story in English, same length)' : ''}, "imagePrompt" (English image description for illustration). Do NOT include characterDescription in imagePrompt; it will be prepended automatically.
 - Story structure: Page 1 = introduction of ${childName}, Pages 2-${bodyEnd} = adventure with rising tension, Page ${climaxPage} = climax, Page ${pageCount} = resolution reflecting the moral
 - The child ${childName} must be the main character in every scene
-- imagePrompt and coverImagePrompt must describe scenes visually in English (characters, setting, action, mood) — do NOT include style instructions, they will be added automatically
+- CAMERA ANGLE VARIATION (critical for visual interest): approximately ${Math.floor(pageCount / 3)} pages should use non-face-forward angles — use "view from behind", "wide establishing shot, silhouette of the character", or "side profile view" for pages ${behindPages.join(', ')} and one more. The remaining pages may show the character's face.
+- imagePrompt and coverImagePrompt must describe scenes visually in English (characters, setting, action, mood) — do NOT include style instructions or character appearance, they will be added automatically
 - coverImagePrompt should be a visually striking, cover-worthy scene that represents the whole story
 - ${getLanguageInstructions(language, req.age)}
 - Do NOT wrap the JSON in markdown code fences or add any other text
@@ -111,7 +116,7 @@ JSON object:`;
   // Repair common LLM JSON issues: trailing commas before ] or }
   jsonStr = jsonStr.replace(/,\s*([\]}])/g, '$1');
 
-  let parsed: { title?: string; coverImagePrompt?: string; pages?: StoryPage[] };
+  let parsed: { title?: string; characterDescription?: string; coverImagePrompt?: string; pages?: StoryPage[] };
   try {
     parsed = JSON.parse(jsonStr);
   } catch (e) {
@@ -133,13 +138,18 @@ JSON object:`;
     }
   }
 
-  const title = parsed.title || userTitle || `${childName}의 동화책`;
-  const coverImagePrompt = STYLE_SEED + ", " + (parsed.coverImagePrompt || pages[0].imagePrompt);
+  const title = userTitle || parsed.title || `${childName}의 동화책`;
 
-  // Prepend style seed to every imagePrompt (AI-03)
+  // Character consistency anchor: fixed appearance chunk prepended to every image prompt
+  const characterDescription = parsed.characterDescription || '';
+  const charChunk = characterDescription ? characterDescription + ", " : "";
+
+  const coverImagePrompt = STYLE_SEED + ", " + charChunk + (parsed.coverImagePrompt || pages[0].imagePrompt);
+
+  // Prepend style seed + character chunk to every imagePrompt for consistency (AI-03)
   for (const page of pages) {
-    page.imagePrompt = STYLE_SEED + ", " + page.imagePrompt;
+    page.imagePrompt = STYLE_SEED + ", " + charChunk + page.imagePrompt;
   }
 
-  return { title, pages, coverImagePrompt };
+  return { title, pages, coverImagePrompt, characterDescription };
 }

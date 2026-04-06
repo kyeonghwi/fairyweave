@@ -30,6 +30,7 @@ export interface GenerateStoryResult {
   title: string;
   pages: StoryPage[];
   coverImagePrompt: string; // English prompt for cover illustration
+  characterDescription: string; // Fixed character appearance chunk injected into every image prompt
 }
 
 export interface BookRecord {

@@ -57,6 +57,11 @@ function buildPlaceholderPng(): Buffer {
 const FALLBACK_PNG = buildPlaceholderPng();
 
 function dataUriToFile(dataUri: string, filename: string): File {
+  if (!dataUri.startsWith('data:')) {
+    // Relative/absolute URL — not a data URI; use fallback PNG
+    return new File([FALLBACK_PNG], filename, { type: 'image/png' });
+  }
+
   const commaIdx = dataUri.indexOf(',');
   const header = dataUri.slice(0, commaIdx);
   const data = dataUri.slice(commaIdx + 1);
