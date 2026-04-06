@@ -1,46 +1,96 @@
 import { randomUUID } from 'node:crypto';
+import { db } from './db';
 import type { BookRecord, GenerationProgress } from '../types/story';
 
 const MAX_BOOKS = 20;
-const TTL_MS = 30 * 60 * 1000; // 30 minutes
+const TTL_MS = 30 * 60 * 1000;
 
-const store = new Map<string, { record: BookRecord; storedAt: number }>();
+type BookRow = {
+  id: string;
+  title: string;
+  request: string;
+  pages: string;
+  image_urls: string;
+  cover_image_url: string;
+  book_spec_uid: string;
+  created_at: string;
+};
 
-function evictExpired(): void {
-  const now = Date.now();
-  for (const [key, entry] of store) {
-    if (now - entry.storedAt > TTL_MS) store.delete(key);
-  }
+function expiryThreshold(): string {
+  return new Date(Date.now() - TTL_MS).toISOString();
 }
+
+function rowToRecord(row: BookRow): BookRecord {
+  return {
+    id: row.id,
+    title: row.title,
+    request: JSON.parse(row.request),
+    pages: JSON.parse(row.pages),
+    imageUrls: JSON.parse(row.image_urls),
+    coverImageUrl: row.cover_image_url,
+    bookSpecUid: row.book_spec_uid as BookRecord['bookSpecUid'],
+    createdAt: row.created_at,
+  };
+}
+
+const stmtInsert = db.prepare(`
+  INSERT OR REPLACE INTO books
+    (id, title, request, pages, image_urls, cover_image_url, book_spec_uid, created_at)
+  VALUES
+    (@id, @title, @request, @pages, @imageUrls, @coverImageUrl, @bookSpecUid, @createdAt)
+`);
+
+const stmtGetById = db.prepare(
+  'SELECT * FROM books WHERE id = ? AND created_at > ?'
+);
+
+const stmtListAll = db.prepare(
+  'SELECT * FROM books WHERE created_at > ? ORDER BY created_at ASC'
+);
+
+const stmtDeleteExpired = db.prepare(
+  'DELETE FROM books WHERE created_at <= ?'
+);
+
+const stmtDeleteOldest = db.prepare(
+  'DELETE FROM books WHERE id = (SELECT id FROM books ORDER BY created_at ASC LIMIT 1)'
+);
+
+const stmtCount = db.prepare('SELECT COUNT(*) as cnt FROM books');
 
 export const bookStore = {
   save(record: BookRecord): void {
-    evictExpired();
-    // If still at capacity, remove oldest entry
-    if (store.size >= MAX_BOOKS) {
-      const oldest = store.keys().next().value!;
-      store.delete(oldest);
+    stmtDeleteExpired.run(expiryThreshold());
+    const { cnt } = stmtCount.get() as { cnt: number };
+    if (cnt >= MAX_BOOKS) {
+      stmtDeleteOldest.run();
     }
-    store.set(record.id, { record, storedAt: Date.now() });
+    stmtInsert.run({
+      id: record.id,
+      title: record.title,
+      request: JSON.stringify(record.request),
+      pages: JSON.stringify(record.pages),
+      imageUrls: JSON.stringify(record.imageUrls),
+      coverImageUrl: record.coverImageUrl,
+      bookSpecUid: record.bookSpecUid,
+      createdAt: record.createdAt,
+    });
   },
 
   get(id: string): BookRecord | undefined {
-    const entry = store.get(id);
-    if (!entry) return undefined;
-    if (Date.now() - entry.storedAt > TTL_MS) {
-      store.delete(id);
-      return undefined;
-    }
-    return entry.record;
+    const row = stmtGetById.get(id, expiryThreshold()) as BookRow | undefined;
+    if (!row) return undefined;
+    return rowToRecord(row);
   },
 
   list(): BookRecord[] {
-    evictExpired();
-    return Array.from(store.values()).map((e) => e.record);
+    stmtDeleteExpired.run(expiryThreshold());
+    const rows = stmtListAll.all(expiryThreshold()) as BookRow[];
+    return rows.map(rowToRecord);
   },
 };
 
-// --- Generation progress tracking ---
+// --- Generation progress tracking (in-memory: resets on restart intentionally) ---
 const progressStore = new Map<string, GenerationProgress>();
 
 export const progressTracker = {

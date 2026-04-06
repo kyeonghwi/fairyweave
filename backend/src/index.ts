@@ -5,6 +5,7 @@ import { generateRouter } from './routes/generate';
 import { sweebookRouter } from './routes/sweetbook';
 import { webhookRouter } from './routes/webhook';
 import { initTemplates } from './services/sweebookClient';
+import { initDb } from './services/db';
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ app.use('/api', sweebookRouter);
 app.use('/api', webhookRouter);
 
 async function start() {
+  initDb();
   await initTemplates();
   app.listen(PORT, () => {
     // intentionally silent — check health endpoint at /health

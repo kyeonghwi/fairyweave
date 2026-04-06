@@ -17,3 +17,4 @@ dist/
 .trellis/
 docs/
 bash.exe.stackdump
+*.db
