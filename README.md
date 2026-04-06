@@ -35,27 +35,27 @@ npm run dev
 
 ## 사용한 Sweetbook API 엔드포인트
 
-| API 엔드포인트 | 용도 | 사용 시점 |
-|----------------|------|----------|
-| `POST /books` (books.create) | 빈 책 객체 생성, bookUid 획득 | Phase 3 |
-| `POST /books/:bookUid/photos` (photos.upload) | 삽화 이미지 업로드 | Phase 3 |
-| `PUT /books/:bookUid/cover` (covers.create) | 표지 템플릿 적용 | Phase 3 |
-| `PUT /books/:bookUid/contents` (contents.insert) | 본문 배치 | Phase 3 |
-| `POST /books/:bookUid/finalize` (books.finalize) | 책 확정 (편집 잠금) | Phase 3 |
-| `POST /orders` | 주문 생성 (Idempotency-Key 포함) | Phase 3 |
-| `GET /book-specs` | 판형 목록 동적 조회 | Phase 9 |
-| `GET /templates?bookSpecUid=` | 사양별 템플릿 UID 동적 조회 | Phase 5 |
-| `GET /orders/:orderUid` | 주문 상태 및 가격 조회 | Phase 5 |
-| `POST /orders/estimate` | 주문 전 크레딧 잔액 검증 | Phase 7 |
-| `GET /orders` | 주문 목록 조회 | Phase 10 |
-| `POST /orders/:orderUid/cancel` | 주문 취소 | Phase 10 |
-| `GET /credits` | 충전금 잔액 조회 | Phase 10 |
-| `GET /credits/transactions` | 충전금 거래 내역 조회 | Phase 10 |
-| `GET /book-specs/:specUid` | 판형 상세 조회 (가격 정보 포함) | Phase 10 |
-| `GET /books` | 책 목록 조회 (status/limit/offset 필터) | Phase 10 |
-| `GET /books/:bookUid` | 책 상태 조회 (pageCount, status, createdAt) | Phase 10 |
-| `PATCH /orders/:orderUid/shipping` | 배송지 수정 (PAID/PDF_READY 상태에서 가능) | Phase 10 |
-| `GET /templates/:templateUid` | 템플릿 상세 조회 (파라미터 정의, 레이아웃, 썸네일) | Phase 10 |
+| API 엔드포인트 | 용도 |
+|----------------|------|
+| `POST /books` (books.create) | 빈 책 객체 생성, bookUid 획득 |
+| `POST /books/:bookUid/photos` (photos.upload) | 삽화 이미지 업로드 |
+| `PUT /books/:bookUid/cover` (covers.create) | 표지 템플릿 적용 |
+| `PUT /books/:bookUid/contents` (contents.insert) | 본문 배치 |
+| `POST /books/:bookUid/finalize` (books.finalize) | 책 확정 (편집 잠금) |
+| `POST /orders` | 주문 생성 (Idempotency-Key 포함) |
+| `GET /book-specs` | 판형 목록 동적 조회 |
+| `GET /templates?bookSpecUid=` | 사양별 템플릿 UID 동적 조회 |
+| `GET /orders/:orderUid` | 주문 상태 및 가격 조회 |
+| `POST /orders/estimate` | 주문 전 크레딧 잔액 검증 |
+| `GET /orders` | 주문 목록 조회 |
+| `POST /orders/:orderUid/cancel` | 주문 취소 |
+| `GET /credits` | 충전금 잔액 조회 |
+| `GET /credits/transactions` | 충전금 거래 내역 조회 |
+| `GET /book-specs/:specUid` | 판형 상세 조회 (가격 정보 포함) |
+| `GET /books` | 책 목록 조회 (status/limit/offset 필터) |
+| `GET /books/:bookUid` | 책 상태 조회 (pageCount, status, createdAt) |
+| `PATCH /orders/:orderUid/shipping` | 배송지 수정 (PAID/PDF_READY 상태에서 가능) |
+| `GET /templates/:templateUid` | 템플릿 상세 조회 (파라미터 정의, 레이아웃, 썸네일) |
 
 ## AI 도구 활용 내역
 
