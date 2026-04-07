@@ -51,6 +51,12 @@ Items deferred from /plan-eng-review on 2026-04-03.
 - **Context:** book/[id]/page.tsx — Step 타입에 'details' 추가, StepIndicator 컴포넌트 신규
 - **Depends on:** Nothing
 
+### 9. Auto-save draftPages per 완료 to backend
+- **What:** On each [완료] click in story-review Stage 2, PATCH /story with current draftPages
+- **Why:** Prevents session loss from browser refresh during mobile editing
+- **Context:** story-review/[id]/page.tsx — add PATCH call in closePanel after commit
+- **Depends on:** Nothing (PATCH /story already handles partial saves)
+
 ### 7. Touch target size
 - **What:** Increase PageSlider arrow buttons from 40px to 44px (w-10 → w-11)
 - **Why:** Below iOS 44px minimum touch target guideline
