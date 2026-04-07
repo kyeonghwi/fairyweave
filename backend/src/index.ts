@@ -6,6 +6,8 @@ import { sweebookRouter } from './routes/sweetbook';
 import { initTemplates } from './services/sweebookClient';
 import { initDb } from './services/db';
 
+// 루트 .env → backend/.env 순서로 로드 (backend/.env가 우선)
+dotenv.config({ path: '../.env' });
 dotenv.config();
 
 const app = express();

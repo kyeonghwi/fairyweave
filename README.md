@@ -25,8 +25,8 @@ npm install && npm install --prefix frontend && npm install --prefix backend
 
 # 2. 환경변수 설정
 cp .env.example .env
-cp .env.example backend/.env
 # .env 파일을 열어 API 키를 입력하세요
+# (backend/.env는 별도로 만들 필요 없음 — 루트 .env를 자동으로 읽습니다)
 
 # 3. 개발 서버 실행
 npm run dev

@@ -44,8 +44,8 @@ npm run dev   # 루트에서 실행 — 프론트 + 백엔드 동시 시작
 
 ## 환경 변수
 
-- `backend/.env` — GEMINI_API_KEY 필요
-- 루트 `.env` — SWEETBOOK_API_KEY, GEMINI_API_KEY 마스터 보관
+- 루트 `.env` — 모든 API 키 관리 (백엔드가 자동으로 읽음)
+- `backend/.env` — 웹훅 시크릿 등 백엔드 전용 값만 (선택, 루트 .env를 override)
 
 ## Gemini 모델
 
