@@ -140,8 +140,8 @@ JSON object:`;
 
   const title = userTitle || parsed.title || `${childName}의 동화책`;
 
-  // Character consistency anchor: fixed appearance chunk prepended to every image prompt
-  const characterDescription = parsed.characterDescription || '';
+  // Character consistency anchor: photo-extracted appearance takes priority over Gemini-generated
+  const characterDescription = req.characterAppearance || parsed.characterDescription || '';
   const charChunk = characterDescription ? characterDescription + ", " : "";
 
   const coverImagePrompt = STYLE_SEED + ", " + charChunk + (parsed.coverImagePrompt || pages[0].imagePrompt);

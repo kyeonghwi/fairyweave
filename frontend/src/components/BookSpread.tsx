@@ -16,6 +16,7 @@ interface BookSpreadProps {
   onCancelEdit?: () => void;
   onTitleChange?: (value: string) => void;
   onTextChange?: (pageIndex: number, field: 'text' | 'textEn', value: string) => void;
+  onImageRegen?: (pageIndex: number, instruction: string) => Promise<void>;
 }
 
 type FlipDir = 'forward' | 'backward';
@@ -52,6 +53,7 @@ export default function BookSpread({
   onCancelEdit,
   onTitleChange,
   onTextChange,
+  onImageRegen,
 }: BookSpreadProps) {
   const spreads = useMemo(() => buildSpreads(pages.length), [pages.length]);
   const totalSpreads = spreads.length;
@@ -61,12 +63,23 @@ export default function BookSpread({
   const [flipDir, setFlipDir] = useState<FlipDir>('forward');
   const pendingSpreadRef = useRef(currentPage);
 
+  const [regenOpen, setRegenOpen] = useState(false);
+  const [regenInstruction, setRegenInstruction] = useState('');
+  const [regenLoading, setRegenLoading] = useState(false);
+  const [regenError, setRegenError] = useState('');
+
   useEffect(() => {
     if (!isFlipping && currentPage !== displayedSpread) {
       setDisplayedSpread(currentPage);
       pendingSpreadRef.current = currentPage;
     }
   }, [currentPage, isFlipping, displayedSpread]);
+
+  useEffect(() => {
+    setRegenOpen(false);
+    setRegenInstruction('');
+    setRegenError('');
+  }, [displayedSpread]);
 
   const navigate = useCallback(
     (dir: FlipDir) => {
@@ -413,37 +426,37 @@ export default function BookSpread({
           </div>
         )}
 
-        {/* ── Backcover flip forward: left-half flips right (closing the book) ── */}
+        {/* ── Backcover flip forward: right-half flips forward (standard forward page turn) ── */}
         {isFlipping && isBackcoverFlipForward && (
           <div
             key="flip-backcover-fwd"
-            className="animate-flipBackward"
+            className="animate-flipForward"
             onAnimationEnd={handleFlipEnd}
             style={{
               position: 'absolute',
               top: 0,
-              left: 0,
-              right: '50%',
+              left: '50%',
+              right: 0,
               height: '100%',
               zIndex: 10,
-              transformOrigin: 'right center',
+              transformOrigin: 'left center',
               transformStyle: 'preserve-3d',
             }}
           >
-            {/* Front: left page of colophon spread (what user sees before flip) */}
+            {/* Front: blank right page of colophon (what user sees before flip) */}
             <div
               className="absolute inset-0 overflow-hidden"
               style={{ backfaceVisibility: 'hidden' }}
             >
-              {renderSpreadContent(flipFrontSpread, 'left')}
+              {renderSpreadContent(flipFrontSpread, 'right')}
             </div>
 
-            {/* Back: backcover (left half crop) */}
+            {/* Back: backcover (right half crop) */}
             <div
               className="absolute inset-0 overflow-hidden"
               style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
             >
-              <div className="absolute top-0 left-0 h-full" style={{ width: '200%' }}>
+              <div className="absolute top-0 h-full" style={{ width: '200%', right: 0 }}>
                 <BookPage type="backcover" side="left" />
               </div>
             </div>
@@ -451,7 +464,7 @@ export default function BookSpread({
             {/* Page-fold shadow */}
             <div
               className="absolute inset-0 pointer-events-none"
-              style={{ background: 'linear-gradient(to left, rgba(0,0,0,0.15), transparent)' }}
+              style={{ background: 'linear-gradient(to right, rgba(0,0,0,0.15), transparent)' }}
             />
           </div>
         )}
@@ -551,7 +564,7 @@ export default function BookSpread({
         </button>
       </div>
 
-      {/* Edit toggle */}
+      {/* Edit toggle + Image regen */}
       {isEditMode ? (
         <div className="mt-3 flex items-center gap-2">
           <button
@@ -569,15 +582,69 @@ export default function BookSpread({
             완료
           </button>
         </div>
-      ) : onStartEdit ? (
-        <button
-          onClick={onStartEdit}
-          className="mt-3 flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-surface-container-lowest text-on-surface-variant tonal-shadow hover:bg-surface-container-low transition-all"
-        >
-          <span className="material-symbols-outlined text-base">edit</span>
-          글 수정하기
-        </button>
-      ) : null}
+      ) : (
+        <div className="mt-3 flex items-center gap-2">
+          {onImageRegen && currentSpread?.type === 'spread' && !isFlipping && (
+            <button
+              onClick={() => setRegenOpen(p => !p)}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium tonal-shadow transition-all
+                ${regenOpen
+                  ? 'bg-primary text-on-primary hover:opacity-90'
+                  : 'bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low'}`}
+            >
+              <span className="material-symbols-outlined text-base">image</span>
+              이미지 재생성
+            </button>
+          )}
+          {onStartEdit && (
+            <button
+              onClick={onStartEdit}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-surface-container-lowest text-on-surface-variant tonal-shadow hover:bg-surface-container-low transition-all"
+            >
+              <span className="material-symbols-outlined text-base">edit</span>
+              글 수정하기
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Image regen panel */}
+      {regenOpen && currentSpread?.type === 'spread' && (
+        <div className="mt-3 w-full max-w-sm space-y-2">
+          <textarea
+            value={regenInstruction}
+            onChange={e => setRegenInstruction(e.target.value)}
+            rows={2}
+            placeholder="예: 밤하늘 배경으로 바꿔줘, 강아지를 추가해줘"
+            className="w-full rounded-lg px-3 py-2 bg-surface-container-highest border border-outline-variant text-sm
+              placeholder:text-outline focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors outline-none resize-none"
+          />
+          {regenError && <p className="text-xs text-error">{regenError}</p>}
+          <button
+            type="button"
+            disabled={!regenInstruction.trim() || regenLoading}
+            onClick={async () => {
+              setRegenLoading(true);
+              setRegenError('');
+              try {
+                await onImageRegen!(currentSpread.textIndex, regenInstruction);
+                setRegenInstruction('');
+                setRegenOpen(false);
+              } catch {
+                setRegenError('이미지 재생성에 실패했어요. 다시 시도해 주세요.');
+              } finally {
+                setRegenLoading(false);
+              }
+            }}
+            className="w-full text-sm px-4 py-2 rounded-lg bg-primary text-on-primary font-medium
+              hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {regenLoading
+              ? <span className="animate-pulse">이미지 생성 중... (약 20초)</span>
+              : '이미지 다시 생성'}
+          </button>
+        </div>
+      )}
 
       {/* Page counter */}
       <p className="text-xs text-on-surface-variant opacity-50 mt-2">

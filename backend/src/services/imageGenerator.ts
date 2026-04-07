@@ -86,6 +86,10 @@ export async function generateImages(
   async function worker(): Promise<void> {
     while (nextIndex < pages.length) {
       const i = nextIndex++;
+      if (pages[i].skipImage) {
+        onImageComplete?.();
+        continue;
+      }
       try {
         results[i] = await generateSingleImage(model, pages[i].imagePrompt, i + 1, pages.length);
       } catch (err) {

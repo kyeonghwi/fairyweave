@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import TopNavBar from '../../components/TopNavBar';
@@ -67,6 +67,12 @@ export default function CreatePage() {
   const [generateImages, setGenerateImages] = useState(true);
   const [errors, setErrors] = useState<FormErrors>({});
 
+  // Photo personalization state
+  const [childAppearance, setChildAppearance] = useState('');
+  const [photoExtracting, setPhotoExtracting] = useState(false);
+  const [photoReady, setPhotoReady] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
   // Loading state
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -99,6 +105,41 @@ export default function CreatePage() {
   const isCustomTheme = selectedTheme === '직접 입력';
   const effectiveTheme = isCustomTheme ? customTheme : selectedTheme;
 
+  async function handlePhotoChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setPhotoReady(false);
+    setChildAppearance('');
+    setPhotoExtracting(true);
+
+    try {
+      const photoBase64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const res = await fetch('/api/extract-child-features', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photoBase64 }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setChildAppearance(data.characterDescription || '');
+        setPhotoReady(true);
+      }
+      // On failure: silently proceed without photo-based description
+    } catch {
+      // Network error: proceed without photo-based description
+    } finally {
+      setPhotoExtracting(false);
+    }
+  }
+
   function validate(): FormErrors {
     const errs: FormErrors = {};
     if (!childName.trim()) errs.childName = '이름을 입력해 주세요';
@@ -124,6 +165,10 @@ export default function CreatePage() {
         if (status.step === 'story') {
           setProgress(10);
           setStepText('이야기를 쓰고 있어요...');
+        } else if (status.step === 'story_review') {
+          stopPolling();
+          router.push(`/story-review/${id}`);
+          return;
         } else if (status.step === 'images') {
           const pct = 15 + Math.round((status.imagesCompleted / status.totalImages) * 75);
           setProgress(pct);
@@ -178,6 +223,7 @@ export default function CreatePage() {
           pageCount,
           title: bookTitle.trim() || undefined,
           language,
+          characterAppearance: childAppearance || undefined,
         }),
       });
 
@@ -422,9 +468,42 @@ export default function CreatePage() {
                 </button>
               </div>
 
+              {/* 아이 사진 업로드 (선택) */}
+              <div className="rounded-xl px-4 py-3 bg-surface-container-highest border border-outline-variant">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-on-surface">아이 사진 업로드 <span className="text-xs text-on-surface-variant font-normal">(선택)</span></p>
+                    <p className="text-xs text-on-surface-variant mt-0.5">사진으로 주인공 외모를 꼭 닮게 만들어요</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {photoExtracting && (
+                      <span className="text-xs text-on-surface-variant animate-pulse">분석 중...</span>
+                    )}
+                    {photoReady && !photoExtracting && (
+                      <span className="text-xs text-primary font-medium">분석 완료 ✓</span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => photoInputRef.current?.click()}
+                      disabled={photoExtracting}
+                      className="text-sm text-primary font-medium px-3 py-1.5 rounded-lg border border-primary/30 hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {photoReady ? '재업로드' : '사진 선택'}
+                    </button>
+                  </div>
+                </div>
+                <input
+                  ref={photoInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handlePhotoChange}
+                />
+              </div>
+
               {/* Submit */}
-              <Button type="submit" size="lg" className="w-full mt-8">
-                동화책 만들기
+              <Button type="submit" size="lg" className="w-full mt-8" disabled={photoExtracting}>
+                {photoExtracting ? '사진 분석 중...' : '동화책 만들기'}
               </Button>
             </form>
           </div>

@@ -71,6 +71,27 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
     });
   };
 
+  const handleImageRegen = async (pageIndex: number, instruction: string) => {
+    const page = book!.pages[pageIndex];
+    const res = await fetch(`/api/books/${book!.id}/pages/${page.pageNumber}/regenerate-image`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ instruction }),
+    });
+    if (!res.ok) throw new Error('재생성 실패');
+    const data = await res.json() as { imageUrl: string; pageIndex: number };
+    setBook(prev => {
+      if (!prev) return prev;
+      const imageUrls = [...prev.imageUrls];
+      imageUrls[data.pageIndex] = data.imageUrl;
+      const coverImageUrl =
+        prev.coverImageUrl === prev.imageUrls[data.pageIndex]
+          ? data.imageUrl
+          : prev.coverImageUrl;
+      return { ...prev, imageUrls, coverImageUrl };
+    });
+  };
+
   // Order form
   const [recipientName, setRecipientName] = useState('');
   const [recipientPhone, setRecipientPhone] = useState('');
@@ -162,7 +183,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
               </h2>
               <p className="text-secondary mb-6">
                 {isExpired
-                  ? 'AI로 생성한 책은 서버 메모리에 임시 저장돼요. 다시 만들어 보세요!'
+                  ? 'AI로 생성한 책은 30분간 보관돼요. 다시 만들어 보세요!'
                   : loadError}
               </p>
               <div className="flex gap-3 justify-center">
@@ -231,6 +252,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                 onCancelEdit={handleCancelEdit}
                 onTitleChange={handleTitleChange}
                 onTextChange={handleTextChange}
+                onImageRegen={book.isDummy ? undefined : handleImageRegen}
               />
             </div>
 
@@ -414,6 +436,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            title: book!.title,
             pages: book!.pages,
             imageUrls: book!.imageUrls,
             coverImageUrl: book!.coverImageUrl,

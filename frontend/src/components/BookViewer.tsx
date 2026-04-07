@@ -16,6 +16,7 @@ interface BookViewerProps {
   onCancelEdit?: () => void;
   onTitleChange?: (value: string) => void;
   onTextChange?: (pageIndex: number, field: 'text' | 'textEn', value: string) => void;
+  onImageRegen?: (pageIndex: number, instruction: string) => Promise<void>;
 }
 
 /**

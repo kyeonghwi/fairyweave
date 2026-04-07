@@ -3,6 +3,7 @@ export interface StoryPage {
   text: string;        // Story text for this page (Korean, or English in english-only mode)
   textEn?: string;     // English text (bilingual mode only)
   imagePrompt: string; // English image generation prompt with style seed included
+  skipImage?: boolean; // If true, skip image generation for this page
 }
 
 export type BookSpecUid = 'SQUAREBOOK_HC' | 'PHOTOBOOK_A4_SC' | 'PHOTOBOOK_A5_SC';
@@ -24,6 +25,7 @@ export interface GenerateStoryRequest {
   pageCount?: number;   // story pages to generate (default 16)
   title?: string;       // optional user-provided title; auto-generated if empty
   language?: Language;  // default: 'korean'
+  characterAppearance?: string; // photo-extracted appearance description; overrides Gemini-generated characterDescription
 }
 
 export interface GenerateStoryResult {
@@ -42,10 +44,12 @@ export interface BookRecord {
   coverImageUrl: string;    // base64 data URI for cover illustration
   bookSpecUid: BookSpecUid;
   createdAt: string;
+  coverImagePrompt?: string; // stored during story_review step for later image generation
+  characterDescription?: string; // stored during story_review step
 }
 
 export interface GenerationProgress {
-  step: 'story' | 'images' | 'cover' | 'done' | 'error';
+  step: 'story' | 'story_review' | 'images' | 'cover' | 'done' | 'error';
   imagesCompleted: number;
   totalImages: number;
   reason?: string;

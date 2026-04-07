@@ -92,6 +92,7 @@ export const bookStore = {
 
 // --- Generation progress tracking (in-memory: resets on restart intentionally) ---
 const progressStore = new Map<string, GenerationProgress>();
+const skipImagesStore = new Map<string, boolean>();
 
 export const progressTracker = {
   start(id: string, totalImages = 16): void {
@@ -104,6 +105,13 @@ export const progressTracker = {
   incrementImages(id: string): void {
     const p = progressStore.get(id);
     if (p) p.imagesCompleted++;
+  },
+  resetImages(id: string, totalImages: number): void {
+    const p = progressStore.get(id);
+    if (p) {
+      p.imagesCompleted = 0;
+      p.totalImages = totalImages;
+    }
   },
   get(id: string): GenerationProgress | undefined {
     return progressStore.get(id);
@@ -119,6 +127,13 @@ export const progressTracker = {
   },
   remove(id: string): void {
     progressStore.delete(id);
+    skipImagesStore.delete(id);
+  },
+  setSkipImages(id: string, skip: boolean): void {
+    skipImagesStore.set(id, skip);
+  },
+  getSkipImages(id: string): boolean {
+    return skipImagesStore.get(id) ?? false;
   },
 };
 
